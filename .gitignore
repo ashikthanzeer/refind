@@ -20,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local database configuration
+src/main/resources/database.properties
