@@ -1,7 +1,9 @@
 package com.refind.model.enums;
 
 public enum ItemStatus {
-    AVAILABLE,
+    LOST,
+    FOUND,
     CLAIMED,
-    RETURNED
+    RETURNED,
+    CLOSED
 }

@@ -1,75 +1,34 @@
 package com.refind.model;
 
 import com.refind.model.enums.Role;
-
 import java.time.LocalDateTime;
 
 public class User {
-
     private Long id;
     private String name;
     private String email;
-    private String password_hash;
+    private String passwordHash;
     private Role role;
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
-    public User() {
-    }
-
-    public User(String name, String email, String password_hash,
-                Role role, LocalDateTime created_at) {
+    public User() {}
+    public User(String name, String email, String passwordHash, Role role, LocalDateTime createdAt) {
         this.name = name;
         this.email = email;
-        this.password_hash = password_hash;
+        this.passwordHash = passwordHash;
         this.role = role;
-        this.created_at = created_at;
+        this.createdAt = createdAt;
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getpassword_hash() {
-        return password_hash;
-    }
-
-    public void setpassword_hash(String password_hash) {
-        this.password_hash = password_hash;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public LocalDateTime getcreated_at() {
-        return created_at;
-    }
-
-    public void setcreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
