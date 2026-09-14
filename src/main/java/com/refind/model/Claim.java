@@ -8,24 +8,27 @@ public class Claim {
 
     private Long id;
     private User claimant;
-    private FoundItem foundItem;
-    private String justification;
+    private Item item;
+    private String message;
     private ClaimStatus status;
-    private LocalDateTime createdAt;
+    private LocalDateTime submittedAt;
+    private LocalDateTime decidedAt;
 
     public Claim() {
     }
 
     public Claim(User claimant,
-                 FoundItem foundItem,
-                 String justification,
+                 Item item,
+                 String message,
                  ClaimStatus status,
-                 LocalDateTime createdAt) {
+                 LocalDateTime submittedAt,
+                 LocalDateTime decidedAt) {
         this.claimant = claimant;
-        this.foundItem = foundItem;
-        this.justification = justification;
+        this.item = item;
+        this.message = message;
         this.status = status;
-        this.createdAt = createdAt;
+        this.submittedAt = submittedAt;
+        this.decidedAt = decidedAt;
     }
 
     public Long getId() {
@@ -44,20 +47,20 @@ public class Claim {
         this.claimant = claimant;
     }
 
-    public FoundItem getFoundItem() {
-        return foundItem;
+    public Item getItem() {
+        return item;
     }
 
-    public void setFoundItem(FoundItem foundItem) {
-        this.foundItem = foundItem;
+    public void setItem(Item item) {
+        this.item = item;
     }
 
-    public String getJustification() {
-        return justification;
+    public String getMessage() {
+        return message;
     }
 
-    public void setJustification(String justification) {
-        this.justification = justification;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public ClaimStatus getStatus() {
@@ -68,11 +71,20 @@ public class Claim {
         this.status = status;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getSubmittedAt() {
+        return submittedAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setSubmittedAt(LocalDateTime submittedAt) {
+        this.submittedAt = submittedAt;
     }
+
+    public LocalDateTime getDecidedAt() {
+        return decidedAt;
+    }
+
+    public void setDecidedAt(LocalDateTime decidedAt) {
+        this.decidedAt=decidedAt;
+    }
+
 }

@@ -1,6 +1,9 @@
 package com.refind.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import com.refind.model.enums.ItemStatus;
 
 public abstract class Item {
 
@@ -8,8 +11,9 @@ public abstract class Item {
     private String title;
     private String description;
     private Category category;
-    private String location;
-    private LocalDate date;
+    private Location location;
+    private ItemStatus status;
+    private LocalDateTime reportedAt;
     private String imagePath;
     private User reportedBy;
 
@@ -19,15 +23,17 @@ public abstract class Item {
     protected Item(String title,
                    String description,
                    Category category,
-                   String location,
-                   LocalDate date,
+                   Location location,
+                   ItemStatus status,
+                   LocalDateTime reportedAt,
                    String imagePath,
                    User reportedBy) {
         this.title = title;
         this.description = description;
         this.category = category;
         this.location = location;
-        this.date = date;
+        this.status = status;
+        this.reportedAt=reportedAt;
         this.imagePath = imagePath;
         this.reportedBy = reportedBy;
     }
@@ -64,20 +70,28 @@ public abstract class Item {
         this.category = category;
     }
 
-    public String getLocation() {
+    public Location getLocation() {
         return location;
     }
 
-    public void setLocation(String location) {
+    public void setLocation(Location location) {
         this.location = location;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public ItemStatus getStatus(){
+        return status;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setStatus(ItemStatus status){
+        this.status = status;
+    }
+
+    public LocalDateTime getReportedAt(){
+        return reportedAt;
+    }
+
+    public void setReportedAt(LocalDateTime reportedAt){
+        this.reportedAt = reportedAt;
     }
 
     public String getImagePath() {
