@@ -1,0 +1,3 @@
+package com.refind.service.impl;
+import com.refind.dao.UserDAO; import com.refind.exception.ValidationException; import com.refind.model.User; import com.refind.service.UserService; import java.util.*;
+public class JdbcUserService implements UserService { private final UserDAO dao; public JdbcUserService(UserDAO dao){this.dao=dao;} public Optional<User> getUserById(Long id){return dao.findById(id);} public Optional<User> getUserByEmail(String email){return dao.findByEmail(email);} public List<User> getAllUsers(){return dao.findAll();} public User updateUser(User u){if(u==null||u.getId()==null)throw new ValidationException("User id is required for update.");return dao.update(u);} public boolean deleteUser(Long id){return dao.deleteById(id);} }
