@@ -1,20 +1,24 @@
 package com.refind.model;
 
-import java.time.LocalDate;
+import com.refind.model.enums.ItemStatus;
+import com.refind.model.enums.ItemType;
+
+import java.time.LocalDateTime;
 
 public class LostItem extends Item {
 
     public LostItem() {
         super();
+        setType(ItemType.LOST);
     }
 
     public LostItem(String title,
                     String description,
                     Category category,
-                    String location,
-                    LocalDate date,
+                    Location location,
+                    LocalDateTime reportedAt,
                     String imagePath,
                     User reportedBy) {
-        super(title, description, category, location, date, imagePath, reportedBy);
+        super(title, description, ItemType.LOST, ItemStatus.LOST, category, location, reportedAt, imagePath, reportedBy);
     }
 }
