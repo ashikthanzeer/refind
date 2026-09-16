@@ -1,6 +1,6 @@
 # Copy this file to database.properties for a local setup.
 # database.properties is ignored by git so your password is not committed.
-db.url=jdbc:mysql://localhost:3306/lostfound
+db.url=jdbc:mysql://localhost:3306/refind
 db.username=root
 db.password=YOUR_PASSWORD
 

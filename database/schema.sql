@@ -1,10 +1,10 @@
--- Lost & Found Management System
+-- ReFind - Campus Lost & Found Management System
 
-CREATE DATABASE IF NOT EXISTS lostfound
+CREATE DATABASE IF NOT EXISTS refind
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE lostfound;
+USE refind;
 
 -- 1. Users
 CREATE TABLE IF NOT EXISTS users (
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS items (
     title VARCHAR(120) NOT NULL,
     description TEXT,
     type VARCHAR(10) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'FOUND',
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
     category_id INT NOT NULL,
     location_id INT,
     reporter_id INT NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS items (
         CHECK (type IN ('LOST', 'FOUND')),
 
     CONSTRAINT chk_items_status
-        CHECK (status IN ('LOST', 'FOUND', 'CLAIMED', 'RETURNED', 'CLOSED'))
+        CHECK (status IN ('OPEN', 'CLAIMED', 'RETURNED', 'CLOSED'))
 );
 
 -- 5. Claims
