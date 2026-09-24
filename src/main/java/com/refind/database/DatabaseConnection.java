@@ -26,7 +26,7 @@ public final class DatabaseConnection {
         if (url != null && !url.isBlank()) properties.setProperty("db.url", url);
         if (username != null) properties.setProperty("db.username", username);
         if (password != null) properties.setProperty("db.password", password);
-        if (properties.getProperty("db.url") == null) properties.setProperty("db.url", "jdbc:mysql://localhost:3306/refind");
+        if (properties.getProperty("db.url") == null) properties.setProperty("db.url", "jdbc:mysql://localhost:3306/lostfound");
         if (properties.getProperty("db.username") == null) properties.setProperty("db.username", "root");
         if (properties.getProperty("db.password") == null) properties.setProperty("db.password", "");
         return properties;
