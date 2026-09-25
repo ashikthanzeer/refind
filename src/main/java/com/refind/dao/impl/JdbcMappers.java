@@ -21,13 +21,46 @@ final class JdbcMappers {
     }
     static Item item(ResultSet rs) throws SQLException {
         Item i = new Item();
-        i.setId(rs.getLong("id")); i.setTitle(rs.getString("title")); i.setDescription(rs.getString("description"));
-        i.setType(ItemType.valueOf(rs.getString("type"))); i.setStatus(ItemStatus.valueOf(rs.getString("status")));
-        i.setCategory(new Category()); i.getCategory().setId(rs.getLong("category_id"));
-        long locationId = rs.getLong("location_id"); if (!rs.wasNull()) { Location l = new Location(); l.setId(locationId); i.setLocation(l); }
-        i.setReportedBy(new User()); i.getReportedBy().setId(rs.getLong("reporter_id"));
-        var ts = rs.getTimestamp("reported_at"); if (ts != null) i.setReportedAt(ts.toLocalDateTime());
-        i.setImagePath(rs.getString("image_path")); return i;
+        i.setId(rs.getLong("id"));
+        i.setTitle(rs.getString("title"));
+        i.setDescription(rs.getString("description"));
+        i.setType(ItemType.valueOf(rs.getString("type")));
+        i.setStatus(ItemStatus.valueOf(rs.getString("status")));
+
+        Category c = new Category();
+        c.setId(rs.getLong("category_id"));
+        try {
+            String catName = rs.getString("category_name");
+            if (catName != null) c.setName(catName);
+        } catch (SQLException ignored) {}
+        i.setCategory(c);
+
+        long locationId = rs.getLong("location_id");
+        if (!rs.wasNull()) {
+            Location l = new Location();
+            l.setId(locationId);
+            try {
+                l.setCampus(rs.getString("campus"));
+                l.setBuilding(rs.getString("building"));
+                l.setRoom(rs.getString("room"));
+            } catch (SQLException ignored) {}
+            i.setLocation(l);
+        }
+
+        User u = new User();
+        u.setId(rs.getLong("reporter_id"));
+        try {
+            u.setName(rs.getString("reporter_name"));
+            u.setEmail(rs.getString("reporter_email"));
+            String roleStr = rs.getString("reporter_role");
+            if (roleStr != null) u.setRole(Role.valueOf(roleStr));
+        } catch (SQLException ignored) {}
+        i.setReportedBy(u);
+
+        var ts = rs.getTimestamp("reported_at");
+        if (ts != null) i.setReportedAt(ts.toLocalDateTime());
+        i.setImagePath(rs.getString("image_path"));
+        return i;
     }
     static Claim claim(ResultSet rs) throws SQLException {
         Claim c = new Claim(); c.setId(rs.getLong("id"));

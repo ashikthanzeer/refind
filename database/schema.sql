@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS items (
         CHECK (type IN ('LOST', 'FOUND')),
 
     CONSTRAINT chk_items_status
-        CHECK (status IN ('LOST', 'FOUND', 'CLAIMED', 'RETURNED', 'CLOSED'))
+        CHECK (status IN ('OPEN', 'LOST', 'FOUND', 'CLAIMED', 'RETURNED', 'CLOSED'))
 );
 
 -- 5. Claims

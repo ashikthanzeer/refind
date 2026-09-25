@@ -8,7 +8,9 @@ import com.refind.dao.impl.JdbcModerationDAO;
 import com.refind.dao.impl.JdbcNotificationDAO;
 import com.refind.dao.impl.JdbcUserDAO;
 import com.refind.database.DatabaseConnection;
+import com.refind.ui.LostItemApp;
 
+import java.awt.GraphicsEnvironment;
 import java.sql.SQLException;
 
 public final class Application {
@@ -21,6 +23,13 @@ public final class Application {
                     + JdbcCategoryDAO.class.getSimpleName() + ", " + JdbcLocationDAO.class.getSimpleName() + ", "
                     + JdbcItemDAO.class.getSimpleName() + ", " + JdbcClaimDAO.class.getSimpleName() + ", "
                     + JdbcModerationDAO.class.getSimpleName() + ", " + JdbcNotificationDAO.class.getSimpleName());
+        } catch (Exception ex) {
+            System.err.println("Database connection warning: " + ex.getMessage());
+        }
+
+        if (!GraphicsEnvironment.isHeadless()) {
+            System.out.println("Launching ReFind Lost Item Management screens...");
+            LostItemApp.main(args);
         }
     }
 }
