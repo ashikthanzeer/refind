@@ -12,9 +12,11 @@ public interface ItemDAO {
     List<Item> findAll();
     List<Item> findByType(ItemType type);
     List<Item> findByCategory(Long categoryId);
+    List<Item> findByCategoryAndType(Long categoryId, ItemType type);
     List<Item> findByStatus(ItemStatus status);
     List<Item> findByUser(Long userId);
     List<Item> search(String keyword);
+    List<Item> searchByType(String keyword, ItemType type);
     Item update(Item item);
     boolean deleteById(Long id);
 }
