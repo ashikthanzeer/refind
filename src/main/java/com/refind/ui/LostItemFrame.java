@@ -236,23 +236,13 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
 
         browsePanel.add(filterCard, BorderLayout.NORTH);
 
-        // Table in Center
+        // Table styling with guaranteed foreground/background colors
         tableModel = new LostItemTableModel();
         itemTable = new JTable(tableModel);
-        itemTable.setFont(UITheme.FONT_BODY);
-        itemTable.setRowHeight(32);
-        itemTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        itemTable.getTableHeader().setFont(UITheme.FONT_BOLD);
-        itemTable.getTableHeader().setBackground(UITheme.BG_LIGHT);
-        itemTable.getTableHeader().setBorder(new LineBorder(UITheme.BORDER, 1));
-        itemTable.setShowGrid(true);
-        itemTable.setGridColor(UITheme.BORDER);
+        UITheme.styleTable(itemTable);
 
-        // Center align and custom renderers
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        // Column widths
         itemTable.getColumnModel().getColumn(0).setPreferredWidth(45);
-        itemTable.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
         itemTable.getColumnModel().getColumn(1).setPreferredWidth(190);
         itemTable.getColumnModel().getColumn(2).setPreferredWidth(120);
         itemTable.getColumnModel().getColumn(3).setPreferredWidth(140);
@@ -426,10 +416,7 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         formGrid.add(dLbl, gbc);
 
         gbc.gridy = row++;
-        reportDescArea = new JTextArea(4, 30);
-        reportDescArea.setFont(UITheme.FONT_BODY);
-        reportDescArea.setLineWrap(true);
-        reportDescArea.setWrapStyleWord(true);
+        reportDescArea = UITheme.createTextArea(4, 30);
         JScrollPane descScroll = new JScrollPane(reportDescArea);
         formGrid.add(descScroll, gbc);
 
@@ -544,9 +531,10 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         JTextField roomField = new JTextField();
 
         JPanel panel = new JPanel(new GridLayout(3, 2, 6, 6));
-        panel.add(new JLabel("Campus:")); panel.add(campusField);
-        panel.add(new JLabel("Building:")); panel.add(buildingField);
-        panel.add(new JLabel("Room:")); panel.add(roomField);
+        panel.setBackground(UITheme.CARD_BG);
+        panel.add(UITheme.createFieldLabel("Campus:")); panel.add(campusField);
+        panel.add(UITheme.createFieldLabel("Building:")); panel.add(buildingField);
+        panel.add(UITheme.createFieldLabel("Room:")); panel.add(roomField);
 
         int result = JOptionPane.showConfirmDialog(this, panel, "Add New Location", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (result == JOptionPane.OK_OPTION) {

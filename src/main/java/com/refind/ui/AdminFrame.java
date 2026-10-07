@@ -234,17 +234,7 @@ public class AdminFrame extends JFrame implements SessionContext.SessionListener
 
     private JTable createTable(javax.swing.table.TableModel model) {
         JTable table = new JTable(model);
-        table.setFont(UITheme.FONT_BODY);
-        table.setRowHeight(32);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.getTableHeader().setFont(UITheme.FONT_BOLD);
-        table.getTableHeader().setBackground(UITheme.BG_LIGHT);
-        table.setShowGrid(true);
-        table.setGridColor(UITheme.BORDER);
-
-        DefaultTableCellRenderer center = new DefaultTableCellRenderer();
-        center.setHorizontalAlignment(JLabel.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(center);
+        UITheme.styleTable(table);
         return table;
     }
 
@@ -305,11 +295,12 @@ public class AdminFrame extends JFrame implements SessionContext.SessionListener
         role.setSelectedItem(user.getRole());
 
         JPanel form = new JPanel(new GridLayout(0, 1, 6, 6));
-        form.add(new JLabel("Name"));
+        form.setBackground(UITheme.CARD_BG);
+        form.add(UITheme.createFieldLabel("Name"));
         form.add(name);
-        form.add(new JLabel("Email"));
+        form.add(UITheme.createFieldLabel("Email"));
         form.add(email);
-        form.add(new JLabel("Role"));
+        form.add(UITheme.createFieldLabel("Role"));
         form.add(role);
 
         int result = JOptionPane.showConfirmDialog(this, form, "Edit User",
@@ -462,11 +453,12 @@ public class AdminFrame extends JFrame implements SessionContext.SessionListener
 
     private JPanel locationForm(JTextField campus, JTextField building, JTextField room) {
         JPanel form = new JPanel(new GridLayout(0, 1, 6, 6));
-        form.add(new JLabel("Campus *"));
+        form.setBackground(UITheme.CARD_BG);
+        form.add(UITheme.createFieldLabel("Campus *"));
         form.add(campus);
-        form.add(new JLabel("Building"));
+        form.add(UITheme.createFieldLabel("Building"));
         form.add(building);
-        form.add(new JLabel("Room"));
+        form.add(UITheme.createFieldLabel("Room"));
         form.add(room);
         return form;
     }
