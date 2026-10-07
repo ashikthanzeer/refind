@@ -107,13 +107,8 @@ public class FoundItemDetailsDialog extends JDialog {
         bodyPanel.add(descHeader);
         bodyPanel.add(Box.createVerticalStrut(6));
 
-        JTextArea descArea = new JTextArea(item.getDescription() != null ? item.getDescription() : "No description provided.");
-        descArea.setFont(UITheme.FONT_BODY);
-        descArea.setLineWrap(true);
-        descArea.setWrapStyleWord(true);
-        descArea.setEditable(false);
-        descArea.setBackground(UITheme.BG_LIGHT);
-        descArea.setBorder(new EmptyBorder(8, 8, 8, 8));
+        JTextArea descArea = UITheme.createReadOnlyTextArea(
+                item.getDescription() != null ? item.getDescription() : "No description provided.");
 
         JScrollPane descScroll = new JScrollPane(descArea);
         descScroll.setPreferredSize(new Dimension(500, 110));

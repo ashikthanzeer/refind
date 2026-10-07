@@ -32,10 +32,8 @@ import java.util.List;
 public class LostItemApp {
 
     public static void main(String[] args) {
-        // Set System Look & Feel
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
+        // Set up Nimbus Look & Feel with app color palette (avoids Linux GTK white-on-white issues)
+        UITheme.setupLookAndFeel();
 
         SwingUtilities.invokeLater(() -> {
             try {

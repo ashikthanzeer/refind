@@ -145,10 +145,7 @@ public class FoundItemEditDialog extends JDialog {
         formPanel.add(descLbl, gbc);
 
         gbc.gridy = row++;
-        descArea = new JTextArea(4, 30);
-        descArea.setFont(UITheme.FONT_BODY);
-        descArea.setLineWrap(true);
-        descArea.setWrapStyleWord(true);
+        descArea = UITheme.createTextArea(4, 30);
         descArea.setText(item.getDescription() != null ? item.getDescription() : "");
         JScrollPane descScroll = new JScrollPane(descArea);
         formPanel.add(descScroll, gbc);
