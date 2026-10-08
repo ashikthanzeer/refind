@@ -141,9 +141,35 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         currentUserLabel.setFont(UITheme.FONT_BOLD);
         updateCurrentUserDisplay();
 
+        JButton adminBtn = UITheme.createPrimaryButton("🛡️ Admin");
+        adminBtn.addActionListener(e -> {
+            if (!sessionContext.isCurrentUserAdmin()) {
+                JOptionPane.showMessageDialog(this, "Administrator access required.", "Access Denied", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            new AdminFrame(new com.refind.service.impl.JdbcUserService(new com.refind.dao.impl.JdbcUserDAO()),
+                    categoryService, locationService, itemService,
+                    new com.refind.service.impl.JdbcClaimService(new com.refind.dao.impl.JdbcClaimDAO()),
+                    new com.refind.service.impl.JdbcModerationService(new com.refind.dao.impl.JdbcClaimDAO(), new com.refind.dao.impl.JdbcModerationDAO(), new com.refind.dao.impl.JdbcItemDAO(), new com.refind.dao.impl.JdbcNotificationDAO()),
+                    sessionContext).setVisible(true);
+        });
+
+        JButton signInBtn = UITheme.createSecondaryButton("🔑 Sign In");
+        signInBtn.addActionListener(e -> {
+            new LoginDialog(this, new com.refind.service.impl.JdbcAuthService(new com.refind.dao.impl.JdbcUserDAO()),
+                    new com.refind.service.impl.JdbcUserService(new com.refind.dao.impl.JdbcUserDAO()),
+                    sessionContext, () -> {
+                        populateUserSwitcher();
+                        updateCurrentUserDisplay();
+                        loadLostItems();
+                    }).setVisible(true);
+        });
+
         sessionPanel.add(activeUserTag);
         sessionPanel.add(userSwitcherCombo);
         sessionPanel.add(currentUserLabel);
+        sessionPanel.add(adminBtn);
+        sessionPanel.add(signInBtn);
 
         header.add(sessionPanel, BorderLayout.EAST);
         return header;

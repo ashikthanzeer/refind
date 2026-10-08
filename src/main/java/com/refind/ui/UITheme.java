@@ -1,5 +1,6 @@
 package com.refind.ui;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.refind.model.enums.ItemStatus;
 
 import javax.swing.*;
@@ -7,137 +8,250 @@ import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.RoundRectangle2D;
 
+/**
+ * Modern Dark Navy Blue Theme for ReFind.
+ * Features rounded controls, high-contrast typography, and zero color inconsistencies.
+ */
 public final class UITheme {
 
     private UITheme() {}
 
-    // Color Palette
-    public static final Color PRIMARY = new Color(79, 70, 229);       // Indigo 600
-    public static final Color PRIMARY_DARK = new Color(67, 56, 202);  // Indigo 700
-    public static final Color PRIMARY_LIGHT = new Color(238, 242, 255); // Indigo 50
+    // ─── Dark Navy Color Palette ─────────────────────────────────────────────
+    public static final Color BG_DARK        = new Color(11, 17, 32);     // Deep Navy #0B1120
+    public static final Color BG_LIGHT       = BG_DARK;                   // Dark navy alias for backward compatibility
+    public static final Color BG_SURFACE     = new Color(15, 23, 42);     // Slate 900 #0F172A
+    public static final Color CARD_BG        = new Color(24, 34, 53);     // Rich Navy Card #182235
+    public static final Color CARD_HOVER     = new Color(30, 43, 67);     // Elevated Navy #1E2B43
+    public static final Color INPUT_BG       = new Color(15, 23, 42);     // Deep Input Field #0F172A
+    public static final Color BORDER         = new Color(51, 65, 85);     // Slate 700 #334155
+    public static final Color BORDER_FOCUS   = new Color(96, 165, 250);   // Blue 400 #60A5FA
 
-    public static final Color BG_LIGHT = new Color(248, 250, 252);    // Slate 50
-    public static final Color CARD_BG = Color.WHITE;
-    public static final Color TEXT_MAIN = new Color(15, 23, 42);       // Slate 900
-    public static final Color TEXT_MUTED = new Color(100, 116, 139);   // Slate 500
-    public static final Color BORDER = new Color(226, 232, 240);       // Slate 200
-    public static final Color ROW_ALT = new Color(241, 245, 249);      // Slate 100 – alternating table rows
+    // Text & Foregrounds (High Contrast - Slate 50 & Slate 400)
+    public static final Color TEXT_MAIN      = new Color(248, 250, 252);  // Slate 50 (Crisp Off-White)
+    public static final Color TEXT_MUTED     = new Color(148, 163, 184);  // Slate 400 (Readable Light Slate)
+    public static final Color TEXT_DIMMED    = new Color(100, 116, 139);  // Slate 500
 
-    public static final Color SUCCESS = new Color(16, 185, 129);      // Emerald 500
-    public static final Color SUCCESS_LIGHT = new Color(209, 250, 229);
-    public static final Color WARNING = new Color(245, 158, 11);      // Amber 500
-    public static final Color WARNING_LIGHT = new Color(254, 243, 199);
-    public static final Color DANGER = new Color(239, 68, 68);         // Red 500
-    public static final Color DANGER_LIGHT = new Color(254, 226, 226);
-    public static final Color INFO = new Color(14, 165, 233);          // Sky 500
-    public static final Color INFO_LIGHT = new Color(224, 242, 254);
+    // Primary Accents
+    public static final Color PRIMARY        = new Color(59, 130, 246);   // Blue 500 #3B82F6
+    public static final Color PRIMARY_HOVER  = new Color(37, 99, 235);   // Blue 600 #2563EB
+    public static final Color PRIMARY_DARK   = new Color(29, 78, 216);    // Blue 700 #1D4ED8
+    public static final Color PRIMARY_LIGHT  = new Color(30, 58, 110);    // Deep Blue Selection #1E3A6E
+
+    // Table Row Alternation
+    public static final Color ROW_NORMAL     = new Color(24, 34, 53);     // #182235
+    public static final Color ROW_ALT        = new Color(18, 26, 42);     // #121A2A
+
+    // Semantic Status Colors & Badges
+    public static final Color SUCCESS        = new Color(52, 211, 153);   // Emerald 400
+    public static final Color SUCCESS_BG     = new Color(6, 78, 59);      // Dark Emerald #064E3B
+    public static final Color WARNING        = new Color(251, 191, 36);   // Amber 400
+    public static final Color WARNING_BG     = new Color(120, 53, 15);    // Dark Amber #78350F
+    public static final Color DANGER         = new Color(248, 113, 113);  // Red 400
+    public static final Color DANGER_HOVER   = new Color(239, 68, 68);    // Red 500
+    public static final Color DANGER_BG      = new Color(127, 29, 29);    // Dark Red #7F1D1D
+    public static final Color INFO           = new Color(56, 189, 248);   // Sky 400
+    public static final Color INFO_BG        = new Color(12, 74, 110);    // Dark Sky #0C4A6E
+    public static final Color PURPLE         = new Color(192, 132, 252);  // Purple 400
+    public static final Color PURPLE_BG      = new Color(88, 28, 135);    // Dark Purple
 
     // Typography
-    public static final Font FONT_TITLE  = new Font("Segoe UI", Font.BOLD,  18);
-    public static final Font FONT_HEADER = new Font("Segoe UI", Font.BOLD,  14);
-    public static final Font FONT_BODY   = new Font("Segoe UI", Font.PLAIN, 13);
-    public static final Font FONT_BOLD   = new Font("Segoe UI", Font.BOLD,  13);
-    public static final Font FONT_SMALL  = new Font("Segoe UI", Font.PLAIN, 11);
+    public static final Font FONT_BRAND   = new Font("Segoe UI", Font.BOLD,  20);
+    public static final Font FONT_TITLE   = new Font("Segoe UI", Font.BOLD,  17);
+    public static final Font FONT_HEADER  = new Font("Segoe UI", Font.BOLD,  14);
+    public static final Font FONT_BODY    = new Font("Segoe UI", Font.PLAIN, 13);
+    public static final Font FONT_BOLD    = new Font("Segoe UI", Font.BOLD,  13);
+    public static final Font FONT_SMALL   = new Font("Segoe UI", Font.PLAIN, 11);
+    public static final Font FONT_BADGE   = new Font("Segoe UI", Font.BOLD,  11);
 
-    // ─── Look & Feel ─────────────────────────────────────────────────────────
+    // ─── Look & Feel Setup ───────────────────────────────────────────────────
 
-    /**
-     * Configures Nimbus (cross-platform) Look & Feel with app color overrides.
-     * Must be called ONCE before any Swing component is created, on the EDT.
-     * Nimbus respects setBackground/setForeground reliably on all platforms,
-     * unlike the Linux GTK L&F which causes white-on-white rendering issues.
-     */
     public static void setupLookAndFeel() {
-        // 1. Install Nimbus (falls back to cross-platform Metal if unavailable)
         try {
-            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (Exception ignored) {
+            FlatDarkLaf.setup();
+        } catch (Exception ex) {
             try {
-                UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-            } catch (Exception e2) { /* ignore – use whatever default is available */ }
+                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus".equals(info.getName())) {
+                        UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+            } catch (Exception ignored) {}
         }
 
-        // 2. Override global UI defaults so every widget inherits correct colors
-        UIManager.put("control",                   BG_LIGHT);
-        UIManager.put("Panel.background",          BG_LIGHT);
-        UIManager.put("OptionPane.background",     CARD_BG);
+        // Apply dark navy UI defaults to guarantee zero color inconsistencies
+        UIManager.put("Button.arc", 16);
+        UIManager.put("Component.arc", 12);
+        UIManager.put("ProgressBar.arc", 12);
+        UIManager.put("TextComponent.arc", 10);
+        UIManager.put("ScrollBar.thumbArc", 8);
+
+        UIManager.put("control",                      BG_DARK);
+        UIManager.put("Panel.background",             BG_DARK);
+        UIManager.put("OptionPane.background",        CARD_BG);
         UIManager.put("OptionPane.messageForeground", TEXT_MAIN);
-        UIManager.put("Label.foreground",          TEXT_MAIN);
-        UIManager.put("Label.font",                FONT_BODY);
-        UIManager.put("TextField.background",      Color.WHITE);
-        UIManager.put("TextField.foreground",      TEXT_MAIN);
-        UIManager.put("TextField.caretForeground", PRIMARY);
-        UIManager.put("TextArea.background",       Color.WHITE);
-        UIManager.put("TextArea.foreground",       TEXT_MAIN);
-        UIManager.put("TextArea.caretForeground",  PRIMARY);
-        UIManager.put("ComboBox.background",       Color.WHITE);
-        UIManager.put("ComboBox.foreground",       TEXT_MAIN);
-        UIManager.put("Table.background",          Color.WHITE);
-        UIManager.put("Table.foreground",          TEXT_MAIN);
-        UIManager.put("Table.selectionBackground", PRIMARY_LIGHT);
-        UIManager.put("Table.selectionForeground", TEXT_MAIN);
-        UIManager.put("Table.gridColor",           BORDER);
-        UIManager.put("TableHeader.background",    BG_LIGHT);
-        UIManager.put("TableHeader.foreground",    TEXT_MAIN);
-        UIManager.put("TabbedPane.background",     BG_LIGHT);
-        UIManager.put("TabbedPane.foreground",     TEXT_MAIN);
-        UIManager.put("TabbedPane.selected",       CARD_BG);
-        UIManager.put("TabbedPane.tabAreaBackground", BG_LIGHT);
-        UIManager.put("ScrollPane.background",     CARD_BG);
-        UIManager.put("Viewport.background",       CARD_BG);
-        UIManager.put("Button.font",       FONT_BOLD);
-        UIManager.put("ComboBox.font",     FONT_BODY);
-        UIManager.put("TextField.font",    FONT_BODY);
-        UIManager.put("TextArea.font",     FONT_BODY);
-        UIManager.put("Table.font",        FONT_BODY);
-        UIManager.put("TableHeader.font",  FONT_BOLD);
-        UIManager.put("TabbedPane.font",   FONT_BOLD);
+        UIManager.put("Label.foreground",             TEXT_MAIN);
+        UIManager.put("Label.font",                   FONT_BODY);
+
+        UIManager.put("TextField.background",         INPUT_BG);
+        UIManager.put("TextField.foreground",         TEXT_MAIN);
+        UIManager.put("TextField.caretForeground",    PRIMARY);
+        UIManager.put("TextField.selectionBackground",PRIMARY_LIGHT);
+        UIManager.put("TextField.selectionForeground",TEXT_MAIN);
+
+        UIManager.put("PasswordField.background",     INPUT_BG);
+        UIManager.put("PasswordField.foreground",     TEXT_MAIN);
+        UIManager.put("PasswordField.caretForeground",PRIMARY);
+        UIManager.put("PasswordField.selectionBackground", PRIMARY_LIGHT);
+        UIManager.put("PasswordField.selectionForeground", TEXT_MAIN);
+
+        UIManager.put("TextArea.background",          INPUT_BG);
+        UIManager.put("TextArea.foreground",          TEXT_MAIN);
+        UIManager.put("TextArea.caretForeground",     PRIMARY);
+        UIManager.put("TextArea.selectionBackground", PRIMARY_LIGHT);
+        UIManager.put("TextArea.selectionForeground", TEXT_MAIN);
+
+        UIManager.put("ComboBox.background",          INPUT_BG);
+        UIManager.put("ComboBox.foreground",          TEXT_MAIN);
+        UIManager.put("ComboBox.selectionBackground", PRIMARY_LIGHT);
+        UIManager.put("ComboBox.selectionForeground", TEXT_MAIN);
+
+        UIManager.put("Table.background",             CARD_BG);
+        UIManager.put("Table.foreground",             TEXT_MAIN);
+        UIManager.put("Table.selectionBackground",    PRIMARY_LIGHT);
+        UIManager.put("Table.selectionForeground",    TEXT_MAIN);
+        UIManager.put("Table.gridColor",              BORDER);
+
+        UIManager.put("TableHeader.background",       CARD_BG);
+        UIManager.put("TableHeader.foreground",       TEXT_MAIN);
+        UIManager.put("TableHeader.font",             FONT_BOLD);
+
+        UIManager.put("TabbedPane.background",        BG_DARK);
+        UIManager.put("TabbedPane.foreground",        TEXT_MUTED);
+        UIManager.put("TabbedPane.selectedForeground",TEXT_MAIN);
+        UIManager.put("TabbedPane.selected",          CARD_BG);
+        UIManager.put("TabbedPane.tabAreaBackground", BG_DARK);
+
+        UIManager.put("ScrollPane.background",        CARD_BG);
+        UIManager.put("Viewport.background",          CARD_BG);
+    }
+
+    // ─── Custom Rounded Button Class ─────────────────────────────────────────
+
+    public static class RoundedButton extends JButton {
+        private Color normalBg;
+        private Color hoverBg;
+        private Color pressedBg;
+        private Color borderColor;
+        private int cornerRadius = 18;
+        private boolean isHovered = false;
+        private boolean isPressed = false;
+
+        public RoundedButton(String text, Color bg, Color fg, Color hover, Color border) {
+            super(text);
+            this.normalBg = bg;
+            this.hoverBg = hover;
+            this.pressedBg = hover.darker();
+            this.borderColor = border;
+
+            setFont(FONT_BOLD);
+            setForeground(fg);
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+            setBorder(new EmptyBorder(9, 18, 9, 18));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    isHovered = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    isHovered = false;
+                    repaint();
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    isPressed = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    isPressed = false;
+                    repaint();
+                }
+            });
+        }
+
+        public void setCornerRadius(int radius) {
+            this.cornerRadius = radius;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            Color currentBg = normalBg;
+            if (!isEnabled()) {
+                currentBg = BORDER;
+            } else if (isPressed) {
+                currentBg = pressedBg;
+            } else if (isHovered) {
+                currentBg = hoverBg;
+            }
+
+            int w = getWidth();
+            int h = getHeight();
+
+            g2.setColor(currentBg);
+            g2.fill(new RoundRectangle2D.Float(0, 0, w, h, cornerRadius, cornerRadius));
+
+            if (borderColor != null) {
+                g2.setColor(borderColor);
+                g2.setStroke(new BasicStroke(1.2f));
+                g2.draw(new RoundRectangle2D.Float(0.6f, 0.6f, w - 1.2f, h - 1.2f, cornerRadius, cornerRadius));
+            }
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
     }
 
     // ─── Button Factories ─────────────────────────────────────────────────────
 
     public static JButton createPrimaryButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(FONT_BOLD);
-        btn.setBackground(PRIMARY);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(new EmptyBorder(8, 16, 8, 16));
-        return btn;
+        return new RoundedButton(text, PRIMARY, Color.WHITE, PRIMARY_HOVER, null);
     }
 
     public static JButton createSecondaryButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(FONT_BOLD);
-        btn.setBackground(Color.WHITE);
-        btn.setForeground(TEXT_MAIN);
-        btn.setFocusPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(new CompoundBorder(new LineBorder(BORDER, 1), new EmptyBorder(7, 14, 7, 14)));
-        return btn;
+        return new RoundedButton(text, CARD_BG, TEXT_MAIN, CARD_HOVER, BORDER);
     }
 
     public static JButton createDangerButton(String text) {
-        JButton btn = new JButton(text);
-        btn.setFont(FONT_BOLD);
-        btn.setBackground(DANGER);
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setOpaque(true);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(new EmptyBorder(8, 16, 8, 16));
+        return new RoundedButton(text, DANGER, Color.WHITE, DANGER_HOVER, null);
+    }
+
+    public static JButton createSuccessButton(String text) {
+        return new RoundedButton(text, new Color(16, 185, 129), Color.WHITE, new Color(5, 150, 105), null);
+    }
+
+    public static JButton createOutlineButton(String text) {
+        RoundedButton btn = new RoundedButton(text, new Color(15, 23, 42, 0), PRIMARY, new Color(59, 130, 246, 35), PRIMARY);
         return btn;
     }
 
@@ -147,44 +261,48 @@ public final class UITheme {
         JTextField field = new JTextField(columns);
         field.setFont(FONT_BODY);
         field.setForeground(TEXT_MAIN);
-        field.setBackground(Color.WHITE);
-        field.setOpaque(true);
+        field.setBackground(INPUT_BG);
         field.setCaretColor(PRIMARY);
-        field.setBorder(new CompoundBorder(new LineBorder(BORDER, 1), new EmptyBorder(6, 10, 6, 10)));
+        field.setBorder(new CompoundBorder(new LineBorder(BORDER, 1, true), new EmptyBorder(7, 12, 7, 12)));
         return field;
     }
 
-    /** Creates a styled editable JTextArea (e.g. for forms). */
+    public static JPasswordField createPasswordField(int columns) {
+        JPasswordField field = new JPasswordField(columns);
+        field.setFont(FONT_BODY);
+        field.setForeground(TEXT_MAIN);
+        field.setBackground(INPUT_BG);
+        field.setCaretColor(PRIMARY);
+        field.setBorder(new CompoundBorder(new LineBorder(BORDER, 1, true), new EmptyBorder(7, 12, 7, 12)));
+        return field;
+    }
+
     public static JTextArea createTextArea(int rows, int columns) {
         JTextArea area = new JTextArea(rows, columns);
         area.setFont(FONT_BODY);
         area.setForeground(TEXT_MAIN);
-        area.setBackground(Color.WHITE);
-        area.setOpaque(true);
+        area.setBackground(INPUT_BG);
         area.setCaretColor(PRIMARY);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
-        area.setBorder(new EmptyBorder(6, 8, 6, 8));
+        area.setBorder(new EmptyBorder(8, 10, 8, 10));
         return area;
     }
 
-    /** Creates a read-only styled JTextArea (e.g. for detail views). */
     public static JTextArea createReadOnlyTextArea(String text) {
         JTextArea area = new JTextArea(text);
         area.setFont(FONT_BODY);
         area.setForeground(TEXT_MAIN);
-        area.setBackground(BG_LIGHT);
-        area.setOpaque(true);
+        area.setBackground(INPUT_BG);
         area.setEditable(false);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
-        area.setBorder(new EmptyBorder(8, 8, 8, 8));
+        area.setBorder(new EmptyBorder(8, 10, 8, 10));
         return area;
     }
 
     // ─── Label Factories ──────────────────────────────────────────────────────
 
-    /** Plain body-text label. */
     public static JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(FONT_BODY);
@@ -192,7 +310,13 @@ public final class UITheme {
         return label;
     }
 
-    /** Bold form-field label. */
+    public static JLabel createMutedLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(FONT_BODY);
+        label.setForeground(TEXT_MUTED);
+        return label;
+    }
+
     public static JLabel createFieldLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(FONT_BOLD);
@@ -202,96 +326,107 @@ public final class UITheme {
 
     // ─── Table Styling ────────────────────────────────────────────────────────
 
-    /**
-     * Applies consistent font, color, header, and alternating-row styling to a JTable.
-     * Call this after creating any JTable instead of setting properties individually.
-     */
     public static void styleTable(JTable table) {
         table.setFont(FONT_BODY);
         table.setForeground(TEXT_MAIN);
-        table.setBackground(Color.WHITE);
-        table.setRowHeight(32);
+        table.setBackground(CARD_BG);
+        table.setRowHeight(36);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setSelectionBackground(PRIMARY_LIGHT);
         table.setSelectionForeground(TEXT_MAIN);
         table.setShowGrid(true);
-        table.setGridColor(BORDER);
+        table.setGridColor(new Color(30, 41, 59));
         table.setIntercellSpacing(new Dimension(0, 1));
 
-        // Header
+        // Header Styling
         table.getTableHeader().setFont(FONT_BOLD);
-        table.getTableHeader().setBackground(BG_LIGHT);
+        table.getTableHeader().setBackground(new Color(18, 26, 42));
         table.getTableHeader().setForeground(TEXT_MAIN);
         table.getTableHeader().setOpaque(true);
         table.getTableHeader().setBorder(new LineBorder(BORDER, 1));
         table.getTableHeader().setReorderingAllowed(false);
+        table.getTableHeader().setPreferredSize(new Dimension(table.getWidth(), 38));
 
-        // Alternating-row default renderer with guaranteed foreground
-        table.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+        // Alternating row renderer with high contrast text
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
+                                                           boolean isSelected, boolean hasFocus, int row, int column) {
                 super.getTableCellRendererComponent(t, value, isSelected, hasFocus, row, column);
                 if (isSelected) {
                     setBackground(PRIMARY_LIGHT);
-                    setForeground(TEXT_MAIN);
+                    setForeground(Color.WHITE);
                 } else {
-                    setBackground(row % 2 == 0 ? Color.WHITE : ROW_ALT);
+                    setBackground(row % 2 == 0 ? ROW_NORMAL : ROW_ALT);
                     setForeground(TEXT_MAIN);
                 }
-                setBorder(new EmptyBorder(0, 8, 0, 8));
+                setBorder(new EmptyBorder(0, 12, 0, 12));
                 return this;
             }
         });
     }
 
-    // ─── Borders ─────────────────────────────────────────────────────────────
+    // ─── Borders & Badges ─────────────────────────────────────────────────────
 
     public static Border createCardBorder() {
         return new CompoundBorder(
-                new LineBorder(BORDER, 1),
-                new EmptyBorder(16, 16, 16, 16)
+                new LineBorder(BORDER, 1, true),
+                new EmptyBorder(16, 20, 16, 20)
         );
     }
 
-    // ─── Status Badge ─────────────────────────────────────────────────────────
-
     public static JLabel createStatusBadge(ItemStatus status) {
         String text = status != null ? status.name() : "UNKNOWN";
-        JLabel badge = new JLabel(text, SwingConstants.CENTER);
-        badge.setFont(FONT_SMALL);
-        badge.setOpaque(true);
-        badge.setBorder(new EmptyBorder(3, 8, 3, 8));
+        return createRoundedBadge(text, getStatusBg(status), getStatusFg(status));
+    }
 
-        if (status == null) {
-            badge.setBackground(BG_LIGHT);
-            badge.setForeground(TEXT_MUTED);
-            return badge;
-        }
+    public static JLabel createRoleBadge(String role) {
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+        Color bg = isAdmin ? PURPLE_BG : INFO_BG;
+        Color fg = isAdmin ? PURPLE : INFO;
+        return createRoundedBadge(role, bg, fg);
+    }
 
-        switch (status) {
-            case OPEN:
-                badge.setBackground(INFO_LIGHT);
-                badge.setForeground(INFO);
-                break;
-            case LOST:
-                badge.setBackground(WARNING_LIGHT);
-                badge.setForeground(WARNING);
-                break;
-            case CLAIMED:
-                badge.setBackground(PRIMARY_LIGHT);
-                badge.setForeground(PRIMARY);
-                break;
-            case RETURNED:
-                badge.setBackground(SUCCESS_LIGHT);
-                badge.setForeground(SUCCESS);
-                break;
-            case CLOSED:
-            default:
-                badge.setBackground(BG_LIGHT);
-                badge.setForeground(TEXT_MUTED);
-                break;
-        }
+    public static JLabel createRoundedBadge(String text, Color bg, Color fg) {
+        JLabel badge = new JLabel(text, SwingConstants.CENTER) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(bg);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        badge.setFont(FONT_BADGE);
+        badge.setForeground(fg);
+        badge.setOpaque(false);
+        badge.setBorder(new EmptyBorder(3, 10, 3, 10));
         return badge;
+    }
+
+    private static Color getStatusBg(ItemStatus status) {
+        if (status == null) return BORDER;
+        return switch (status) {
+            case OPEN -> INFO_BG;
+            case LOST -> WARNING_BG;
+            case FOUND -> new Color(30, 58, 138); // Deep Blue
+            case CLAIMED -> PURPLE_BG;
+            case RETURNED -> SUCCESS_BG;
+            case CLOSED -> new Color(30, 41, 59);
+        };
+    }
+
+    private static Color getStatusFg(ItemStatus status) {
+        if (status == null) return TEXT_MUTED;
+        return switch (status) {
+            case OPEN -> INFO;
+            case LOST -> WARNING;
+            case FOUND -> new Color(96, 165, 250);
+            case CLAIMED -> PURPLE;
+            case RETURNED -> SUCCESS;
+            case CLOSED -> TEXT_MUTED;
+        };
     }
 }

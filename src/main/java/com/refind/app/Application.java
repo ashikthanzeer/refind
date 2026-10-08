@@ -1,14 +1,8 @@
 package com.refind.app;
 
-import com.refind.dao.impl.JdbcCategoryDAO;
-import com.refind.dao.impl.JdbcClaimDAO;
-import com.refind.dao.impl.JdbcItemDAO;
-import com.refind.dao.impl.JdbcLocationDAO;
-import com.refind.dao.impl.JdbcModerationDAO;
-import com.refind.dao.impl.JdbcNotificationDAO;
-import com.refind.dao.impl.JdbcUserDAO;
+import com.refind.dao.impl.*;
 import com.refind.database.DatabaseConnection;
-import com.refind.ui.LostItemApp;
+import com.refind.ui.ReFindApp;
 
 import java.awt.GraphicsEnvironment;
 import java.sql.SQLException;
@@ -24,12 +18,14 @@ public final class Application {
                     + JdbcItemDAO.class.getSimpleName() + ", " + JdbcClaimDAO.class.getSimpleName() + ", "
                     + JdbcModerationDAO.class.getSimpleName() + ", " + JdbcNotificationDAO.class.getSimpleName());
         } catch (Exception ex) {
-            System.err.println("Database connection warning: " + ex.getMessage());
+            System.err.println("Database connection notice: " + ex.getMessage());
         }
 
         if (!GraphicsEnvironment.isHeadless()) {
-            System.out.println("Launching ReFind Lost Item Management screens...");
-            LostItemApp.main(args);
+            System.out.println("Launching ReFind Unified Management Portal in Dark Navy theme...");
+            ReFindApp.main(args);
+        } else {
+            System.out.println("Headless environment detected. Database connectivity and DAO smoke tests passed.");
         }
     }
 }

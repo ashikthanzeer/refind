@@ -22,10 +22,8 @@ import javax.swing.*;
 public class FoundItemApp {
 
     public static void main(String[] args) {
-        // Set System Look & Feel
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception ignored) {}
+        // Set up Dark Navy Look & Feel
+        UITheme.setupLookAndFeel();
 
         SwingUtilities.invokeLater(() -> {
             try {

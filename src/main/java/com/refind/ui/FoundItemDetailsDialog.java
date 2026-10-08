@@ -145,7 +145,7 @@ public class FoundItemDetailsDialog extends JDialog {
                         "Edit Denied", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            LostItemEditDialog editDialog = new LostItemEditDialog(this, item, itemService, categoryService, locationService, sessionContext, () -> {
+            FoundItemEditDialog editDialog = new FoundItemEditDialog(this, item, itemService, categoryService, locationService, sessionContext, () -> {
                 item = itemService.getItemById(item.getId()).orElse(item);
                 if (onDataChanged != null) onDataChanged.run();
                 dispose();
@@ -181,6 +181,17 @@ public class FoundItemDetailsDialog extends JDialog {
 
         closeBtn.addActionListener(e -> dispose());
 
+        JButton claimBtn = UITheme.createPrimaryButton("✋ Claim This Item");
+        claimBtn.addActionListener(e -> {
+            com.refind.service.ClaimService cs = new com.refind.service.impl.JdbcClaimService(new com.refind.dao.impl.JdbcClaimDAO());
+            SubmitClaimDialog claimDlg = new SubmitClaimDialog(this, item, cs, sessionContext, () -> {
+                if (onDataChanged != null) onDataChanged.run();
+                dispose();
+            });
+            claimDlg.setVisible(true);
+        });
+
+        buttonPanel.add(claimBtn);
         buttonPanel.add(editBtn);
         buttonPanel.add(deleteBtn);
         buttonPanel.add(closeBtn);
