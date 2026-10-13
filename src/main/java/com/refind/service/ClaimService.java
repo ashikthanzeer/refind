@@ -1,6 +1,7 @@
 package com.refind.service;
 
 import com.refind.model.Claim;
+import com.refind.model.User;
 import com.refind.model.enums.ClaimStatus;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,6 @@ public interface ClaimService {
     List<Claim> getClaimsByClaimant(Long userId);
     List<Claim> getClaimsByItem(Long itemId);
     List<Claim> getClaimsByStatus(ClaimStatus status);
-    Claim updateClaim(Claim claim);
+    boolean withdrawClaim(Long claimId, User currentUser);
     boolean deleteClaim(Long id);
 }

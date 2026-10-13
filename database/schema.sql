@@ -1,10 +1,9 @@
 -- Lost & Found Management System
+-- Creates all tables in the current active database (e.g. defaultdb or lostfound).
+-- If running on a clean local MySQL instance, uncomment the two lines below:
+-- CREATE DATABASE IF NOT EXISTS lostfound CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- USE lostfound;
 
-CREATE DATABASE IF NOT EXISTS lostfound
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE lostfound;
 
 -- 1. Users
 CREATE TABLE IF NOT EXISTS users (

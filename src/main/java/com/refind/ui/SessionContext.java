@@ -4,13 +4,12 @@ import com.refind.model.User;
 import com.refind.model.enums.Role;
 import com.refind.service.UserService;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Manages the active user session in the UI, enabling easy switching
- * between users to test ownership and permitted edit/deletion workflows.
+ * Manages the active user session in the UI, enforcing role-based permissions,
+ * authentication state, and notifying UI listeners of login/logout transitions.
  */
 public class SessionContext {
 
@@ -20,53 +19,64 @@ public class SessionContext {
 
     private User currentUser;
     private final List<SessionListener> listeners = new ArrayList<>();
-    private final List<User> availableUsers = new ArrayList<>();
 
-    public SessionContext(UserService userService) {
-        initUsers(userService);
+    /** Creates an unauthenticated session. */
+    public SessionContext() {
+        // A session is populated only by a successful login or registration.
     }
 
-    private void initUsers(UserService userService) {
-        try {
-            List<User> fromDb = userService.getAllUsers();
-            if (fromDb != null && !fromDb.isEmpty()) {
-                availableUsers.addAll(fromDb);
-            }
-        } catch (Exception ignored) {
-            // If DB is offline or not yet initialized, fall back to default demo users
+    /**
+     * Retained for callers that previously supplied a user service. User lists must
+     * not be loaded into a session because they enabled post-login impersonation.
+     */
+    public SessionContext(UserService userService) {
+        this();
+    }
+
+    public boolean isLoggedIn() {
+        return currentUser != null;
+    }
+
+    public User requireAuthenticated() {
+        if (!isLoggedIn()) {
+            throw new IllegalStateException("Authentication required. Please sign in to continue.");
         }
+        return currentUser;
+    }
 
-        if (availableUsers.isEmpty()) {
-            User demoOwner = new User("John Doe", "john@campus.edu", "hash", Role.USER, LocalDateTime.now());
-            demoOwner.setId(1L);
-            User demoOther = new User("Alice Smith", "alice@campus.edu", "hash", Role.USER, LocalDateTime.now());
-            demoOther.setId(2L);
-            User demoAdmin = new User("Admin Officer", "admin@campus.edu", "hash", Role.ADMIN, LocalDateTime.now());
-            demoAdmin.setId(3L);
-
-            availableUsers.add(demoOwner);
-            availableUsers.add(demoOther);
-            availableUsers.add(demoAdmin);
+    public void requireAdmin() {
+        User user = requireAuthenticated();
+        if (user.getRole() != Role.ADMIN) {
+            throw new IllegalStateException("Administrator access is required.");
         }
+    }
 
-        this.currentUser = availableUsers.get(0);
+    public boolean canAccessUserData(Long targetUserId) {
+        if (targetUserId == null) {
+            return false;
+        }
+        if (currentUser == null) {
+            return false;
+        }
+        return currentUser.getRole() == Role.ADMIN || targetUserId.equals(currentUser.getId());
     }
 
     public User getCurrentUser() {
         return currentUser;
     }
 
-    public void setCurrentUser(User user) {
-        if (user != null) {
-            this.currentUser = user;
-            for (SessionListener listener : listeners) {
-                listener.onUserChanged(user);
-            }
-        }
+    /**
+     * Records the identity established by the login, registration, or profile UI.
+     * Package visibility prevents unrelated application layers from changing it.
+     */
+    void setCurrentUser(User user) {
+        this.currentUser = user;
+        notifyListeners();
     }
 
-    public List<User> getAvailableUsers() {
-        return new ArrayList<>(availableUsers);
+    public void logout() {
+        this.currentUser = null;
+        notifyListeners();
     }
 
     public void addSessionListener(SessionListener listener) {
@@ -77,6 +87,12 @@ public class SessionContext {
 
     public void removeSessionListener(SessionListener listener) {
         listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (SessionListener listener : new ArrayList<>(listeners)) {
+            listener.onUserChanged(currentUser);
+        }
     }
 
     public boolean isCurrentUserAdmin() {

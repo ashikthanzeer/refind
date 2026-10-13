@@ -1,6 +1,8 @@
 package com.refind.ui;
 
+import com.refind.model.enums.ClaimStatus;
 import com.refind.model.enums.ItemStatus;
+import com.refind.model.enums.Role;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -23,6 +25,7 @@ public final class UITheme {
     public static final Color TEXT_MAIN = new Color(15, 23, 42);       // Slate 900
     public static final Color TEXT_MUTED = new Color(100, 116, 139);   // Slate 500
     public static final Color BORDER = new Color(226, 232, 240);       // Slate 200
+    public static final Color BORDER_LIGHT = new Color(191, 219, 254); // Sky 200
     public static final Color ROW_ALT = new Color(241, 245, 249);      // Slate 100 – alternating table rows
 
     public static final Color SUCCESS = new Color(16, 185, 129);      // Emerald 500
@@ -271,6 +274,7 @@ public final class UITheme {
 
         switch (status) {
             case OPEN:
+            case FOUND:
                 badge.setBackground(INFO_LIGHT);
                 badge.setForeground(INFO);
                 break;
@@ -290,6 +294,71 @@ public final class UITheme {
             default:
                 badge.setBackground(BG_LIGHT);
                 badge.setForeground(TEXT_MUTED);
+                break;
+        }
+        return badge;
+    }
+
+    public static JLabel createStatusBadge(ClaimStatus status) {
+        String text = status != null ? status.name() : "UNKNOWN";
+        JLabel badge = new JLabel(text, SwingConstants.CENTER);
+        badge.setFont(FONT_SMALL);
+        badge.setOpaque(true);
+        badge.setBorder(new EmptyBorder(3, 8, 3, 8));
+
+        if (status == null) {
+            badge.setBackground(BG_LIGHT);
+            badge.setForeground(TEXT_MUTED);
+            return badge;
+        }
+
+        switch (status) {
+            case PENDING:
+                badge.setBackground(WARNING_LIGHT);
+                badge.setForeground(WARNING);
+                break;
+            case APPROVED:
+                badge.setBackground(SUCCESS_LIGHT);
+                badge.setForeground(SUCCESS);
+                break;
+            case REJECTED:
+                badge.setBackground(DANGER_LIGHT);
+                badge.setForeground(DANGER);
+                break;
+            default:
+                badge.setBackground(BG_LIGHT);
+                badge.setForeground(TEXT_MUTED);
+                break;
+        }
+        return badge;
+    }
+
+    public static JLabel createRoleBadge(Role role) {
+        String text = role != null ? role.name() : "USER";
+        JLabel badge = new JLabel(text, SwingConstants.CENTER);
+        badge.setFont(FONT_SMALL);
+        badge.setOpaque(true);
+        badge.setBorder(new EmptyBorder(3, 8, 3, 8));
+
+        if (role == null) {
+            badge.setBackground(BG_LIGHT);
+            badge.setForeground(TEXT_MUTED);
+            return badge;
+        }
+
+        switch (role) {
+            case ADMIN:
+                badge.setBackground(DANGER_LIGHT);
+                badge.setForeground(DANGER);
+                break;
+            case MODERATOR:
+                badge.setBackground(WARNING_LIGHT);
+                badge.setForeground(WARNING);
+                break;
+            case USER:
+            default:
+                badge.setBackground(PRIMARY_LIGHT);
+                badge.setForeground(PRIMARY);
                 break;
         }
         return badge;

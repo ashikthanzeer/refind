@@ -9,6 +9,6 @@ public interface NotificationDAO {
     Optional<Notification> findById(Long id);
     List<Notification> findByUser(Long userId);
     List<Notification> findUnreadByUser(Long userId);
-    boolean markAsRead(Long id);
-    boolean deleteById(Long id);
+    boolean markAsReadForUser(Long id, Long userId);
+    boolean deleteByIdForUser(Long id, Long userId);
 }

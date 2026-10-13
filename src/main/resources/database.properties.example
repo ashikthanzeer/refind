@@ -1,7 +1,30 @@
-# Copy this file to database.properties for a local setup.
-# database.properties is ignored by git so your password is not committed.
+# Copy this file to database.properties for a local or cloud setup.
+# database.properties is ignored by git so your credentials are not committed.
+
+# Option 1: Local MySQL
+# db.url=jdbc:mysql://localhost:3306/lostfound
+# db.username=root
+# db.password=YOUR_PASSWORD
+
+# Option 2: Cloud MySQL (SSL required)
+# db.url=jdbc:mysql://YOUR_HOST:YOUR_PORT/defaultdb?sslMode=REQUIRED
+# db.username=YOUR_USERNAME
+# db.password=YOUR_PASSWORD
+
+# Default fallback:
 db.url=jdbc:mysql://localhost:3306/lostfound
 db.username=root
 db.password=YOUR_PASSWORD
 
-# Alternatively set REFIND_DB_URL, REFIND_DB_USERNAME and REFIND_DB_PASSWORD.
+# Environment variables supported:
+# REFIND_DB_URL, REFIND_DB_USERNAME, REFIND_DB_PASSWORD
+# or standard DATABASE_URL, DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
+
+# Startup safety defaults (both disabled unless explicitly set to true):
+# REFIND_AUTO_INITIALIZE_SCHEMA=true   # Only for a non-production development database.
+# REFIND_SEED_DEMO_DATA=true           # Adds sample categories, locations, users, and items only when explicitly requested.
+
+# Integration-test database guard (required only for dedicated DB tests):
+# REFIND_TEST_DB_URL=jdbc:mysql://localhost:3306/test_refind?sslMode=REQUIRED
+# REFIND_TEST_DB_USERNAME=refind_test_user
+# REFIND_TEST_DB_PASSWORD=YOUR_TEST_PASSWORD

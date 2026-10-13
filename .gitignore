@@ -3,3 +3,5 @@ target/
 *.iml
 .vscode/
 src/main/resources/database.properties
+uploads/
+

@@ -1,6 +1,7 @@
 package com.refind.service.impl;
 
 import com.refind.dao.ItemDAO;
+import com.refind.dao.UserDAO;
 import com.refind.exception.ValidationException;
 import com.refind.model.Item;
 import com.refind.model.User;
@@ -16,9 +17,11 @@ import java.util.Optional;
 public class JdbcItemService implements ItemService {
 
     private final ItemDAO dao;
+    private final UserDAO userDao;
 
-    public JdbcItemService(ItemDAO dao) {
+    public JdbcItemService(ItemDAO dao, UserDAO userDao) {
         this.dao = dao;
+        this.userDao = userDao;
     }
 
     private void validate(Item i) {
@@ -136,26 +139,33 @@ public class JdbcItemService implements ItemService {
     }
 
     @Override
-    public Item updateItem(Item i) {
-        return updateItem(i, null);
-    }
-
-    @Override
     public Item updateItem(Item i, User currentUser) {
-        validate(i);
+        if (i == null) {
+            throw new ValidationException("Item cannot be null.");
+        }
         if (i.getId() == null) {
             throw new ValidationException("Item id is required for update.");
         }
-        if (currentUser != null && currentUser.getId() != null) {
-            Item existing = dao.findById(i.getId())
-                    .orElseThrow(() -> new ValidationException("Item not found: " + i.getId()));
-            boolean isOwner = existing.getReportedBy() != null
-                    && currentUser.getId().equals(existing.getReportedBy().getId());
-            boolean isAdmin = currentUser.getRole() == Role.ADMIN;
-            if (!isOwner && !isAdmin) {
-                throw new ValidationException("Permission denied: You can only edit items that you reported.");
-            }
+        if (currentUser == null || currentUser.getId() == null) {
+            throw new ValidationException("Authentication required: Current user is missing.");
         }
+
+        Item existing = dao.findById(i.getId())
+                .orElseThrow(() -> new ValidationException("Item not found: " + i.getId()));
+        User authenticatedUser = userDao.findById(currentUser.getId())
+                .orElseThrow(() -> new ValidationException("Authenticated user no longer exists."));
+        boolean isOwner = existing.getReportedBy() != null
+                && authenticatedUser.getId().equals(existing.getReportedBy().getId());
+        boolean isAdmin = authenticatedUser.getRole() == Role.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new ValidationException("Permission denied: You can only edit items that you reported.");
+        }
+
+        // Ownership and original report time are immutable through this update path.
+        // In particular, never persist a reporter supplied by a UI form or a modified Item.
+        i.setReportedBy(existing.getReportedBy());
+        i.setReportedAt(existing.getReportedAt());
+        validate(i);
         return dao.update(i);
     }
 

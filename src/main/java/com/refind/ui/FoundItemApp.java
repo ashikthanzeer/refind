@@ -8,10 +8,13 @@ import com.refind.dao.impl.JdbcCategoryDAO;
 import com.refind.dao.impl.JdbcItemDAO;
 import com.refind.dao.impl.JdbcLocationDAO;
 import com.refind.dao.impl.JdbcUserDAO;
+import com.refind.database.DatabaseConnection;
+import com.refind.service.AuthService;
 import com.refind.service.CategoryService;
 import com.refind.service.ItemService;
 import com.refind.service.LocationService;
 import com.refind.service.UserService;
+import com.refind.service.impl.JdbcAuthService;
 import com.refind.service.impl.JdbcCategoryService;
 import com.refind.service.impl.JdbcItemService;
 import com.refind.service.impl.JdbcLocationService;
@@ -29,6 +32,10 @@ public class FoundItemApp {
 
         SwingUtilities.invokeLater(() -> {
             try {
+                try (var conn = DatabaseConnection.getConnection()) {
+                    DatabaseConnection.prepareApplicationDatabase(conn);
+                }
+
                 // Initialize Data Access Objects
                 UserDAO userDAO = new JdbcUserDAO();
                 CategoryDAO categoryDAO = new JdbcCategoryDAO();
@@ -39,14 +46,24 @@ public class FoundItemApp {
                 UserService userService = new JdbcUserService(userDAO);
                 CategoryService categoryService = new JdbcCategoryService(categoryDAO);
                 LocationService locationService = new JdbcLocationService(locationDAO);
-                ItemService itemService = new JdbcItemService(itemDAO);
+                ItemService itemService = new JdbcItemService(itemDAO, userDAO);
+                AuthService authService = new JdbcAuthService(userDAO);
 
                 // Initialize Session Context
                 SessionContext sessionContext = new SessionContext(userService);
 
-                // Launch Found Item Window
-                FoundItemFrame frame = new FoundItemFrame(itemService, categoryService, locationService, sessionContext);
-                frame.setVisible(true);
+                // Reuse the app's real authentication flow before allowing item reporting.
+                if (sessionContext.isLoggedIn()) {
+                    FoundItemFrame frame = new FoundItemFrame(itemService, categoryService, locationService, sessionContext);
+                    frame.setVisible(true);
+                } else {
+                    LoginDialog loginDialog = new LoginDialog(null, authService, sessionContext,
+                            () -> {
+                                FoundItemFrame frame = new FoundItemFrame(itemService, categoryService, locationService, sessionContext);
+                                frame.setVisible(true);
+                            });
+                    loginDialog.setVisible(true);
+                }
 
             } catch (Exception ex) {
                 ex.printStackTrace();
