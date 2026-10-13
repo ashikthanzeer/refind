@@ -19,7 +19,11 @@ public interface ItemService {
     List<Item> getItemsByUser(Long userId);
     List<Item> searchItems(String keyword);
     List<Item> searchItemsByType(String keyword, ItemType type);
-    Item updateItem(Item item);
+    /**
+     * Updates an item on behalf of an authenticated user.  The service derives
+     * ownership from the stored item; callers must not be trusted to supply a
+     * reporter id in the mutable item object.
+     */
     Item updateItem(Item item, User currentUser);
     boolean deleteItem(Long id);
     boolean deleteItem(Long id, User currentUser);

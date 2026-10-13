@@ -1,5 +1,10 @@
 package com.refind.ui;
 
+import com.refind.dao.impl.JdbcClaimDAO;
+import com.refind.dao.impl.JdbcItemDAO;
+import com.refind.dao.impl.JdbcModerationDAO;
+import com.refind.dao.impl.JdbcNotificationDAO;
+import com.refind.dao.impl.JdbcUserDAO;
 import com.refind.exception.ValidationException;
 import com.refind.model.Category;
 import com.refind.model.Item;
@@ -8,8 +13,16 @@ import com.refind.model.User;
 import com.refind.model.enums.ItemStatus;
 import com.refind.model.enums.ItemType;
 import com.refind.service.CategoryService;
+import com.refind.service.ClaimService;
+import com.refind.service.ImageService;
 import com.refind.service.ItemService;
 import com.refind.service.LocationService;
+import com.refind.service.ModerationService;
+import com.refind.service.NotificationService;
+import com.refind.service.impl.JdbcClaimService;
+import com.refind.service.impl.JdbcModerationService;
+import com.refind.service.impl.JdbcNotificationService;
+import com.refind.service.impl.JdbcUserService;
 
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
@@ -54,7 +67,6 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
 
     // Header Session Components
     private JLabel currentUserLabel;
-    private JComboBox<UserItem> userSwitcherCombo;
 
     public LostItemFrame(ItemService itemService, CategoryService categoryService,
                          LocationService locationService, SessionContext sessionContext) {
@@ -64,10 +76,15 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         this.locationService = locationService;
         this.sessionContext = sessionContext;
 
-        sessionContext.addSessionListener(this);
-
         initWindow();
         loadLostItems();
+        sessionContext.addSessionListener(this);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosed(java.awt.event.WindowEvent event) {
+                sessionContext.removeSessionListener(LostItemFrame.this);
+            }
+        });
     }
 
     private void initWindow() {
@@ -90,6 +107,11 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
 
         tabbedPane.addTab("Browse & Search Lost Items", buildBrowsePanel());
         tabbedPane.addTab("Report New Lost Item", buildReportPanel());
+
+        ClaimService claimService = new JdbcClaimService(new JdbcClaimDAO(), new JdbcItemDAO(), new JdbcNotificationDAO());
+        ModerationService moderationService = new JdbcModerationService(
+                new JdbcClaimDAO(), new JdbcModerationDAO(), new JdbcItemDAO(), new JdbcNotificationDAO(), new JdbcUserDAO());
+        tabbedPane.addTab("Claims & Moderation", new ClaimsPanel(claimService, moderationService, itemService, sessionContext, new ImageService()));
 
         root.add(tabbedPane, BorderLayout.CENTER);
     }
@@ -118,7 +140,7 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         brandPanel.add(subTitle);
         header.add(brandPanel, BorderLayout.WEST);
 
-        // Session Switcher Panel
+        // Session actions panel. Identity comes exclusively from SessionContext.
         JPanel sessionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         sessionPanel.setBackground(UITheme.CARD_BG);
 
@@ -126,60 +148,90 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         activeUserTag.setFont(UITheme.FONT_BOLD);
         activeUserTag.setForeground(UITheme.TEXT_MUTED);
 
-        userSwitcherCombo = new JComboBox<>();
-        userSwitcherCombo.setFont(UITheme.FONT_BODY);
-        populateUserSwitcher();
-
-        userSwitcherCombo.addActionListener(e -> {
-            UserItem selected = (UserItem) userSwitcherCombo.getSelectedItem();
-            if (selected != null && selected.user != null) {
-                sessionContext.setCurrentUser(selected.user);
-            }
-        });
-
         currentUserLabel = new JLabel();
         currentUserLabel.setFont(UITheme.FONT_BOLD);
         updateCurrentUserDisplay();
 
+        JButton notificationsBtn = UITheme.createSecondaryButton("Notifications");
+        notificationsBtn.addActionListener(e -> {
+            User user = sessionContext.getCurrentUser();
+            if (user == null || user.getId() == null) {
+                JOptionPane.showMessageDialog(this, "Please sign in to view notifications.", "Sign In Required", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            NotificationService notificationService = new JdbcNotificationService(new JdbcNotificationDAO());
+            new NotificationDialog(this, notificationService, sessionContext, () -> updateCurrentUserDisplay()).setVisible(true);
+        });
+
+        JButton profileBtn = UITheme.createSecondaryButton("My Profile");
+        profileBtn.addActionListener(e -> {
+            User user = sessionContext.getCurrentUser();
+            if (user == null || user.getId() == null) {
+                JOptionPane.showMessageDialog(this, "Please sign in to view your profile.", "Sign In Required", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            new UserProfileDialog(this, new com.refind.service.impl.JdbcAuthService(new JdbcUserDAO()), sessionContext, () -> updateCurrentUserDisplay()).setVisible(true);
+        });
+
+        JButton logoutBtn = UITheme.createDangerButton("Log Out");
+        logoutBtn.addActionListener(e -> logoutAndShowLogin());
+
+        JButton foundPortalBtn = UITheme.createSecondaryButton("Found Items");
+        foundPortalBtn.addActionListener(e -> {
+            FoundItemFrame frame = new FoundItemFrame(itemService, categoryService, locationService, sessionContext);
+            frame.setVisible(true);
+            dispose();
+        });
+
+        JButton adminBtn = UITheme.createSecondaryButton("Admin");
+        adminBtn.addActionListener(e -> {
+            if (!sessionContext.isCurrentUserAdmin()) {
+                JOptionPane.showMessageDialog(this, "Administrator access is required.", "Access Denied", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            new AdminFrame(new JdbcUserService(new JdbcUserDAO()), categoryService, locationService, sessionContext).setVisible(true);
+        });
+
         sessionPanel.add(activeUserTag);
-        sessionPanel.add(userSwitcherCombo);
         sessionPanel.add(currentUserLabel);
+        sessionPanel.add(notificationsBtn);
+        sessionPanel.add(profileBtn);
+        sessionPanel.add(foundPortalBtn);
+        sessionPanel.add(adminBtn);
+        sessionPanel.add(logoutBtn);
 
         header.add(sessionPanel, BorderLayout.EAST);
         return header;
     }
 
-    private void populateUserSwitcher() {
-        userSwitcherCombo.removeAllItems();
-        List<User> users = sessionContext.getAvailableUsers();
-        UserItem currentItem = null;
-        for (User u : users) {
-            UserItem item = new UserItem(u);
-            userSwitcherCombo.addItem(item);
-            if (sessionContext.getCurrentUser() != null && u.getId().equals(sessionContext.getCurrentUser().getId())) {
-                currentItem = item;
-            }
-        }
-        if (currentItem != null) {
-            userSwitcherCombo.setSelectedItem(currentItem);
-        }
+    private void logoutAndShowLogin() {
+        sessionContext.logout();
+        dispose();
+        LoginDialog loginDialog = new LoginDialog(null, new com.refind.service.impl.JdbcAuthService(new JdbcUserDAO()), sessionContext,
+                () -> {
+                    LostItemFrame frame = new LostItemFrame(itemService, categoryService, locationService, sessionContext);
+                    frame.setVisible(true);
+                });
+        loginDialog.setVisible(true);
     }
 
     private void updateCurrentUserDisplay() {
         User u = sessionContext.getCurrentUser();
-        if (u != null) {
-            currentUserLabel.setText("[" + u.getRole() + "]");
+        if (currentUserLabel != null) {
+            currentUserLabel.setText(u == null ? "[Signed out]" : "[" + u.getRole() + "]");
             currentUserLabel.setForeground(sessionContext.isCurrentUserAdmin() ? UITheme.DANGER : UITheme.PRIMARY);
-            if (reporterPreviewLabel != null) {
-                reporterPreviewLabel.setText(u.getName() + " (" + u.getEmail() + ")");
-            }
+        }
+        if (reporterPreviewLabel != null) {
+            reporterPreviewLabel.setText(u == null ? "Please sign in" : u.getName() + " (" + u.getEmail() + ")");
         }
     }
 
     @Override
     public void onUserChanged(User newUser) {
         updateCurrentUserDisplay();
-        tableModel.fireTableDataChanged();
+        if (tableModel != null) {
+            tableModel.fireTableDataChanged();
+        }
     }
 
     private JPanel buildBrowsePanel() {
@@ -752,12 +804,4 @@ public class LostItemFrame extends JFrame implements SessionContext.SessionListe
         public String toString() { return name; }
     }
 
-    static class UserItem {
-        final User user;
-        UserItem(User user) { this.user = user; }
-        @Override
-        public String toString() {
-            return user.getName() + " (" + user.getRole() + ")";
-        }
-    }
 }

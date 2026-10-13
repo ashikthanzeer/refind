@@ -16,10 +16,12 @@ import com.refind.model.User;
 import com.refind.model.enums.ItemStatus;
 import com.refind.model.enums.ItemType;
 import com.refind.model.enums.Role;
+import com.refind.service.AuthService;
 import com.refind.service.CategoryService;
 import com.refind.service.ItemService;
 import com.refind.service.LocationService;
 import com.refind.service.UserService;
+import com.refind.service.impl.JdbcAuthService;
 import com.refind.service.impl.JdbcCategoryService;
 import com.refind.service.impl.JdbcItemService;
 import com.refind.service.impl.JdbcLocationService;
@@ -37,6 +39,16 @@ public class LostItemApp {
 
         SwingUtilities.invokeLater(() -> {
             try {
+                // Validate the existing schema. Creation is explicit and disabled by default.
+                try (var conn = DatabaseConnection.getConnection()) {
+                    DatabaseConnection.prepareApplicationDatabase(conn);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null,
+                            "Cannot start ReFind Lost Item Portal:\n" + ex.getMessage(),
+                            "Database Setup Required", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
                 // Initialize Data Access Objects
                 UserDAO userDAO = new JdbcUserDAO();
                 CategoryDAO categoryDAO = new JdbcCategoryDAO();
@@ -47,17 +59,17 @@ public class LostItemApp {
                 UserService userService = new JdbcUserService(userDAO);
                 CategoryService categoryService = new JdbcCategoryService(categoryDAO);
                 LocationService locationService = new JdbcLocationService(locationDAO);
-                ItemService itemService = new JdbcItemService(itemDAO);
+                ItemService itemService = new JdbcItemService(itemDAO, userDAO);
+                AuthService authService = new JdbcAuthService(userDAO);
 
-                // Auto-seed sample test records if database tables are empty
-                seedSampleDataIfEmpty(userService, categoryService, locationService, itemService);
+                // Demo data is opt-in and never added during normal startup.
+                runDemoSeedIfEnabled(() -> seedSampleDataIfEmpty(userService, categoryService, locationService, itemService));
 
                 // Initialize Session Context
                 SessionContext sessionContext = new SessionContext(userService);
 
-                // Launch Lost Item Window
-                LostItemFrame frame = new LostItemFrame(itemService, categoryService, locationService, sessionContext);
-                frame.setVisible(true);
+                // Require an authenticated session before allowing item workflows.
+                showLoginAndLaunch(authService, sessionContext, itemService, categoryService, locationService);
 
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -69,8 +81,31 @@ public class LostItemApp {
         });
     }
 
-    private static void seedSampleDataIfEmpty(UserService userService, CategoryService categoryService,
-                                              LocationService locationService, ItemService itemService) {
+    private static void showLoginAndLaunch(AuthService authService,
+                                          SessionContext sessionContext,
+                                          ItemService itemService,
+                                          CategoryService categoryService,
+                                          LocationService locationService) {
+        if (sessionContext.isLoggedIn()) {
+            launchLostItemFrame(itemService, categoryService, locationService, sessionContext);
+            return;
+        }
+
+        LoginDialog loginDialog = new LoginDialog(null, authService, sessionContext,
+                () -> launchLostItemFrame(itemService, categoryService, locationService, sessionContext));
+        loginDialog.setVisible(true);
+    }
+
+    private static void launchLostItemFrame(ItemService itemService,
+                                          CategoryService categoryService,
+                                          LocationService locationService,
+                                          SessionContext sessionContext) {
+        LostItemFrame frame = new LostItemFrame(itemService, categoryService, locationService, sessionContext);
+        frame.setVisible(true);
+    }
+
+    static void seedSampleDataIfEmpty(UserService userService, CategoryService categoryService,
+                                      LocationService locationService, ItemService itemService) {
         try {
             // Seed Categories if none exist
             List<Category> categories = categoryService.getAllCategories();
@@ -148,5 +183,21 @@ public class LostItemApp {
             // Seeder failure is non-fatal (e.g. database already pre-populated or read-only)
             System.err.println("Database sample seed notice: " + ex.getMessage());
         }
+    }
+
+    static boolean runDemoSeedIfEnabled(Runnable seeder) {
+        if (!isDemoDataSeedingEnabled()) {
+            return false;
+        }
+        seeder.run();
+        return true;
+    }
+
+    static boolean isDemoDataSeedingEnabled() {
+        String configured = System.getProperty("refind.seedDemoData");
+        if (configured == null) {
+            configured = System.getenv("REFIND_SEED_DEMO_DATA");
+        }
+        return "true".equalsIgnoreCase(configured == null ? "" : configured.trim());
     }
 }

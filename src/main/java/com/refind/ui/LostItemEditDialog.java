@@ -4,14 +4,15 @@ import com.refind.exception.ValidationException;
 import com.refind.model.Category;
 import com.refind.model.Item;
 import com.refind.model.Location;
-import com.refind.model.User;
 import com.refind.model.enums.ItemStatus;
 import com.refind.service.CategoryService;
+import com.refind.service.ImageService;
 import com.refind.service.ItemService;
 import com.refind.service.LocationService;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.List;
@@ -23,6 +24,7 @@ public class LostItemEditDialog extends JDialog {
     private final CategoryService categoryService;
     private final LocationService locationService;
     private final SessionContext sessionContext;
+    private final ImageService imageService;
     private final Runnable onSuccess;
 
     private JTextField titleField;
@@ -31,6 +33,7 @@ public class LostItemEditDialog extends JDialog {
     private JComboBox<LocationWrapper> locationCombo;
     private JComboBox<ItemStatus> statusCombo;
     private JTextField imagePathField;
+    private JLabel imagePreviewLabel;
 
     public LostItemEditDialog(Window parent, Item item, ItemService itemService,
                               CategoryService categoryService, LocationService locationService,
@@ -41,15 +44,17 @@ public class LostItemEditDialog extends JDialog {
         this.categoryService = categoryService;
         this.locationService = locationService;
         this.sessionContext = sessionContext;
+        this.imageService = new ImageService();
         this.onSuccess = onSuccess;
 
         initComponents();
-        setSize(520, 560);
+        setSize(540, 600);
+        setMinimumSize(new Dimension(480, 500));
         setLocationRelativeTo(parent);
     }
 
     private void initComponents() {
-        JPanel contentPane = new JPanel(new BorderLayout(0, 16));
+        JPanel contentPane = new JPanel(new BorderLayout(0, 14));
         contentPane.setBackground(UITheme.CARD_BG);
         contentPane.setBorder(new EmptyBorder(20, 24, 20, 24));
         setContentPane(contentPane);
@@ -59,23 +64,25 @@ public class LostItemEditDialog extends JDialog {
         headerLabel.setForeground(UITheme.TEXT_MAIN);
         contentPane.add(headerLabel, BorderLayout.NORTH);
 
+        // Form Grid
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(UITheme.CARD_BG);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 4, 6, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
+        gbc.insets = new Insets(3, 0, 3, 0);
+
         int row = 0;
 
         // Title
-        gbc.gridx = 0; gbc.gridy = row++;
-        JLabel titleLbl = new JLabel("Title *");
+        gbc.gridy = row++;
+        JLabel titleLbl = new JLabel("Item Title *");
         titleLbl.setFont(UITheme.FONT_BOLD);
         formPanel.add(titleLbl, gbc);
 
         gbc.gridy = row++;
-        titleField = UITheme.createTextField(30);
-        titleField.setText(item.getTitle());
+        titleField = UITheme.createTextField(25);
+        titleField.setText(item.getTitle() != null ? item.getTitle() : "");
         formPanel.add(titleField, gbc);
 
         // Category
@@ -114,27 +121,43 @@ public class LostItemEditDialog extends JDialog {
         statusCombo.setSelectedItem(item.getStatus());
         formPanel.add(statusCombo, gbc);
 
-        // Image Path
+        // Image Path / Upload
         gbc.gridy = row++;
-        JLabel imgLbl = new JLabel("Image Path (Optional)");
+        JLabel imgLbl = new JLabel("Photograph (Upload or Path)");
         imgLbl.setFont(UITheme.FONT_BOLD);
         formPanel.add(imgLbl, gbc);
 
         gbc.gridy = row++;
-        JPanel imgRow = new JPanel(new BorderLayout(6, 0));
+        JPanel imgRow = new JPanel(new BorderLayout(8, 0));
         imgRow.setBackground(UITheme.CARD_BG);
+
+        imagePreviewLabel = new JLabel();
+        imagePreviewLabel.setPreferredSize(new Dimension(80, 56));
+        imagePreviewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        imagePreviewLabel.setBorder(BorderFactory.createLineBorder(UITheme.BORDER_LIGHT));
+        imagePreviewLabel.setIcon(imageService.getScaledThumbnail(item.getImagePath(), 80, 56));
+        imgRow.add(imagePreviewLabel, BorderLayout.WEST);
+
         imagePathField = UITheme.createTextField(20);
         imagePathField.setText(item.getImagePath() != null ? item.getImagePath() : "");
+        imgRow.add(imagePathField, BorderLayout.CENTER);
+
         JButton browseBtn = UITheme.createSecondaryButton("Browse...");
         browseBtn.addActionListener(e -> {
             JFileChooser chooser = new JFileChooser();
+            chooser.setFileFilter(new FileNameExtensionFilter("Image Files (JPEG, PNG, GIF)", "jpg", "jpeg", "png", "gif"));
             int res = chooser.showOpenDialog(this);
             if (res == JFileChooser.APPROVE_OPTION) {
                 File file = chooser.getSelectedFile();
-                imagePathField.setText(file.getAbsolutePath());
+                try {
+                    String stored = imageService.storeImage(file);
+                    imagePathField.setText(stored);
+                    imagePreviewLabel.setIcon(imageService.getScaledThumbnail(stored, 80, 56));
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Failed to upload image: " + ex.getMessage(), "Upload Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
-        imgRow.add(imagePathField, BorderLayout.CENTER);
         imgRow.add(browseBtn, BorderLayout.EAST);
         formPanel.add(imgRow, gbc);
 
@@ -150,116 +173,118 @@ public class LostItemEditDialog extends JDialog {
         JScrollPane descScroll = new JScrollPane(descArea);
         formPanel.add(descScroll, gbc);
 
-        contentPane.add(formPanel, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(formPanel);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(14);
+        contentPane.add(scrollPane, BorderLayout.CENTER);
 
         // Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         buttonPanel.setBackground(UITheme.CARD_BG);
 
-        JButton saveBtn = UITheme.createPrimaryButton("Save Changes");
         JButton cancelBtn = UITheme.createSecondaryButton("Cancel");
-
-        saveBtn.addActionListener(e -> saveChanges());
         cancelBtn.addActionListener(e -> dispose());
 
-        buttonPanel.add(saveBtn);
+        JButton saveBtn = UITheme.createPrimaryButton("Save Changes");
+        saveBtn.addActionListener(e -> saveChanges());
+
         buttonPanel.add(cancelBtn);
+        buttonPanel.add(saveBtn);
         contentPane.add(buttonPanel, BorderLayout.SOUTH);
     }
 
     private void populateCategories() {
+        categoryCombo.removeAllItems();
         try {
-            List<Category> list = categoryService.getAllCategories();
-            CategoryWrapper selected = null;
-            for (Category c : list) {
-                CategoryWrapper w = new CategoryWrapper(c);
-                categoryCombo.addItem(w);
+            List<Category> categories = categoryService.getAllCategories();
+            int selectedIndex = 0;
+            for (int i = 0; i < categories.size(); i++) {
+                Category c = categories.get(i);
+                categoryCombo.addItem(new CategoryWrapper(c));
                 if (item.getCategory() != null && c.getId().equals(item.getCategory().getId())) {
-                    selected = w;
+                    selectedIndex = i;
                 }
             }
-            if (selected != null) {
-                categoryCombo.setSelectedItem(selected);
+            if (categoryCombo.getItemCount() > 0) {
+                categoryCombo.setSelectedIndex(selectedIndex);
             }
         } catch (Exception ex) {
-            categoryCombo.addItem(new CategoryWrapper(new Category("General")));
+            ex.printStackTrace();
         }
     }
 
     private void populateLocations() {
+        locationCombo.removeAllItems();
+        locationCombo.addItem(new LocationWrapper(null)); // "None / Unspecified"
         try {
-            List<Location> list = locationService.getAllLocations();
-            locationCombo.addItem(new LocationWrapper(null)); // None
-            LocationWrapper selected = null;
-            for (Location l : list) {
-                LocationWrapper w = new LocationWrapper(l);
-                locationCombo.addItem(w);
-                if (item.getLocation() != null && l.getId().equals(item.getLocation().getId())) {
-                    selected = w;
+            List<Location> locations = locationService.getAllLocations();
+            int selectedIndex = 0;
+            for (int i = 0; i < locations.size(); i++) {
+                Location loc = locations.get(i);
+                locationCombo.addItem(new LocationWrapper(loc));
+                if (item.getLocation() != null && loc.getId().equals(item.getLocation().getId())) {
+                    selectedIndex = i + 1;
                 }
             }
-            if (selected != null) {
-                locationCombo.setSelectedItem(selected);
-            }
+            locationCombo.setSelectedIndex(selectedIndex);
         } catch (Exception ex) {
-            locationCombo.addItem(new LocationWrapper(null));
+            ex.printStackTrace();
         }
     }
 
     private void saveChanges() {
         String title = titleField.getText().trim();
-        if (title.isBlank()) {
-            JOptionPane.showMessageDialog(this, "Title is required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+        if (title.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Item title cannot be empty.", "Validation Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        CategoryWrapper catWrap = (CategoryWrapper) categoryCombo.getSelectedItem();
-        if (catWrap == null || catWrap.category == null) {
-            JOptionPane.showMessageDialog(this, "Please select a category.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+        CategoryWrapper selectedCat = (CategoryWrapper) categoryCombo.getSelectedItem();
+        if (selectedCat == null || selectedCat.category == null) {
+            JOptionPane.showMessageDialog(this, "Please select a category.", "Validation Error", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        LocationWrapper locWrap = (LocationWrapper) locationCombo.getSelectedItem();
-        ItemStatus status = (ItemStatus) statusCombo.getSelectedItem();
+        LocationWrapper selectedLoc = (LocationWrapper) locationCombo.getSelectedItem();
+        ItemStatus selectedStatus = (ItemStatus) statusCombo.getSelectedItem();
+        String imgPath = imagePathField.getText().trim();
         String desc = descArea.getText().trim();
-        String img = imagePathField.getText().trim();
 
         item.setTitle(title);
-        item.setDescription(desc);
-        item.setCategory(catWrap.category);
-        item.setLocation(locWrap != null ? locWrap.location : null);
-        item.setStatus(status != null ? status : ItemStatus.OPEN);
-        item.setImagePath(img.isEmpty() ? null : img);
+        item.setCategory(selectedCat.category);
+        item.setLocation(selectedLoc != null ? selectedLoc.location : null);
+        item.setStatus(selectedStatus != null ? selectedStatus : ItemStatus.OPEN);
+        item.setImagePath(imgPath.isEmpty() ? null : imgPath);
+        item.setDescription(desc.isEmpty() ? null : desc);
 
         try {
-            User currentUser = sessionContext.getCurrentUser();
-            itemService.updateItem(item, currentUser);
-            JOptionPane.showMessageDialog(this, "Lost item #" + item.getId() + " updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            itemService.updateItem(item, sessionContext.getCurrentUser());
+            JOptionPane.showMessageDialog(this, "Lost item updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
             if (onSuccess != null) onSuccess.run();
             dispose();
-        } catch (ValidationException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Permission / Validation Error", JOptionPane.ERROR_MESSAGE);
+        } catch (ValidationException ve) {
+            JOptionPane.showMessageDialog(this, ve.getMessage(), "Validation Error", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Failed to update item: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    static class CategoryWrapper {
-        final Category category;
-        CategoryWrapper(Category category) { this.category = category; }
+    public static class CategoryWrapper {
+        public final Category category;
+        public CategoryWrapper(Category category) { this.category = category; }
         @Override
-        public String toString() { return category != null ? category.getName() : "None"; }
+        public String toString() {
+            return category != null ? category.getName() : "Select Category";
+        }
     }
 
-    static class LocationWrapper {
-        final Location location;
-        LocationWrapper(Location location) { this.location = location; }
+    public static class LocationWrapper {
+        public final Location location;
+        public LocationWrapper(Location location) { this.location = location; }
         @Override
         public String toString() {
             if (location == null) return "None / Unspecified";
-            StringBuilder sb = new StringBuilder();
-            if (location.getCampus() != null) sb.append(location.getCampus());
-            if (location.getBuilding() != null) sb.append(" - ").append(location.getBuilding());
-            if (location.getRoom() != null) sb.append(" (Room ").append(location.getRoom()).append(")");
-            return sb.toString();
+            return location.getCampus() + " - " + location.getBuilding() + " (Room " + location.getRoom() + ")";
         }
     }
 }
