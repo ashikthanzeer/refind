@@ -46,6 +46,21 @@ This is for local development only. The application does not automatically creat
 mvn exec:java -Dexec.mainClass=com.refind.app.Application
 ```
 
+## First administrator bootstrap
+
+When no administrator exists, the login dialog exposes an explicit `Create First Administrator` action. This workflow is separate from normal registration and is the only supported way to create the initial admin account.
+
+It:
+
+- requires a full name, email, and password chosen by the operator
+- rejects duplicate or invalid credentials
+- hashes the password with the existing BCrypt flow
+- creates the user with the persisted `ADMIN` role
+- refuses to run if an administrator already exists
+- does not auto-create an administrator during normal startup
+
+The bootstrap is intentionally explicit and must not be triggered by ordinary user registration.
+
 ## Run unit tests
 
 ```bash

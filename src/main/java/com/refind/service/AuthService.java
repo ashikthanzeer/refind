@@ -10,6 +10,12 @@ public interface AuthService {
 
     User register(String name, String email, String password, String confirmPassword);
 
+    User bootstrapFirstAdmin(String name, String email, String password);
+
+    User bootstrapFirstAdmin(String name, String email, String password, String confirmPassword);
+
+    boolean hasAdministrator();
+
     Optional<User> login(String email, String password);
 
     boolean emailExists(String email);

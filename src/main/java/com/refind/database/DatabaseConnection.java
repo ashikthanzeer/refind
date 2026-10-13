@@ -417,6 +417,11 @@ public final class DatabaseConnection {
                     "    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                     "    CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id)" +
                     ")",
+                    "CREATE TABLE IF NOT EXISTS admin_bootstrap_lock (" +
+                    "    id INT PRIMARY KEY," +
+                    "    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+                    ")",
+                    "INSERT IGNORE INTO admin_bootstrap_lock (id, created_at) VALUES (1, NOW())",
                     "CREATE INDEX idx_items_status ON items(status)",
                     "CREATE INDEX idx_items_category ON items(category_id)",
                     "CREATE INDEX idx_claims_item ON claims(item_id)",

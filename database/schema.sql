@@ -106,6 +106,15 @@ CREATE TABLE IF NOT EXISTS notifications (
         FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- 8. Explicit first-administrator bootstrap lock
+-- This is used to serialize initial admin creation and prevent concurrent bootstrap races.
+CREATE TABLE IF NOT EXISTS admin_bootstrap_lock (
+    id INT PRIMARY KEY,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO admin_bootstrap_lock (id, created_at) VALUES (1, NOW());
+
 -- Indexes recommended in the technical notes
 CREATE INDEX idx_items_status ON items(status);
 CREATE INDEX idx_items_category ON items(category_id);

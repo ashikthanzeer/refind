@@ -12,6 +12,7 @@ import com.refind.model.enums.ClaimStatus;
 import com.refind.model.enums.ItemStatus;
 import com.refind.model.enums.ItemType;
 import com.refind.model.enums.Role;
+import com.refind.security.PasswordEncoder;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -124,6 +126,75 @@ class ServiceAuthorizationTest {
     }
 
     @Test
+    void firstAdminCanBeCreatedWhenNoAdminExists() {
+        InMemoryUserDao users = new InMemoryUserDao();
+        JdbcAuthService authService = new JdbcAuthService(users);
+
+        User created = authService.bootstrapFirstAdmin("Root Admin", "admin@campus.edu", "StrongPass123");
+
+        assertEquals(Role.ADMIN, created.getRole());
+        assertTrue(PasswordEncoder.verify("StrongPass123", created.getPasswordHash()));
+        assertNotEquals("StrongPass123", created.getPasswordHash());
+        assertTrue(authService.hasAdministrator());
+        assertTrue(authService.login("admin@campus.edu", "StrongPass123").isPresent());
+    }
+
+    @Test
+    void bootstrapRejectsAdminWhenAdministratorAlreadyExists() {
+        User existingAdmin = user(100L, Role.ADMIN);
+        InMemoryUserDao users = new InMemoryUserDao(existingAdmin);
+        JdbcAuthService authService = new JdbcAuthService(users);
+
+        ValidationException ex = assertThrows(ValidationException.class,
+                () -> authService.bootstrapFirstAdmin("Another Admin", "another@campus.edu", "StrongPass123"));
+        assertTrue(ex.getMessage().contains("already exists"));
+        assertEquals(1, users.findAll().size());
+    }
+
+    @Test
+    void ordinaryRegistrationCannotAssignAdminRole() {
+        InMemoryUserDao users = new InMemoryUserDao();
+        JdbcAuthService authService = new JdbcAuthService(users);
+
+        User created = authService.register("Regular User", "user@campus.edu", "StrongPass123");
+
+        assertEquals(Role.USER, created.getRole());
+        assertFalse(authService.hasAdministrator());
+    }
+
+    @Test
+    void invalidFirstAdminCredentialsAreRejected() {
+        InMemoryUserDao users = new InMemoryUserDao();
+        JdbcAuthService authService = new JdbcAuthService(users);
+
+        assertThrows(ValidationException.class,
+                () -> authService.bootstrapFirstAdmin("", "admin@campus.edu", "StrongPass123"));
+        assertThrows(ValidationException.class,
+                () -> authService.bootstrapFirstAdmin("Root Admin", "not-an-email", "StrongPass123"));
+        assertThrows(ValidationException.class,
+                () -> authService.bootstrapFirstAdmin("Root Admin", "admin@campus.edu", "bad"));
+        assertFalse(authService.hasAdministrator());
+    }
+
+    @Test
+    void failedBootstrapDoesNotLeavePartialAccount() {
+        InMemoryUserDao users = new InMemoryUserDao() {
+            @Override
+            public User save(User value) {
+                if (value.getEmail().equals("duplicate@campus.edu")) {
+                    throw new RuntimeException("simulated failure");
+                }
+                return super.save(value);
+            }
+        };
+        JdbcAuthService authService = new JdbcAuthService(users);
+
+        assertThrows(RuntimeException.class,
+                () -> authService.bootstrapFirstAdmin("Broken Admin", "duplicate@campus.edu", "StrongPass123"));
+        assertTrue(users.findAll().isEmpty());
+    }
+
+    @Test
     void reportingWorkflowStillSavesAValidItem() {
         User reporter = user(1L, Role.USER);
         InMemoryItemDao items = new InMemoryItemDao(null);
@@ -171,7 +242,7 @@ class ServiceAuthorizationTest {
         @Override public boolean deleteById(Long id) { deleted = true; return true; }
     }
 
-    private static final class InMemoryUserDao implements UserDAO {
+    private static class InMemoryUserDao implements UserDAO {
         private final Map<Long, User> users = new HashMap<>();
 
         private InMemoryUserDao(User... values) {
