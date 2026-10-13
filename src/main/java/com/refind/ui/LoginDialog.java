@@ -100,6 +100,9 @@ public class LoginDialog extends JDialog {
         JPanel buttonPanel = new JPanel(new BorderLayout(8, 0));
         buttonPanel.setBackground(UITheme.CARD_BG);
 
+        JPanel leftActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        leftActions.setBackground(UITheme.CARD_BG);
+
         JButton registerLinkBtn = new JButton("Register");
         registerLinkBtn.setFont(UITheme.FONT_BODY);
         registerLinkBtn.setForeground(UITheme.PRIMARY);
@@ -107,6 +110,18 @@ public class LoginDialog extends JDialog {
         registerLinkBtn.setContentAreaFilled(false);
         registerLinkBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         registerLinkBtn.addActionListener(e -> openRegisterDialog());
+        leftActions.add(registerLinkBtn);
+
+        if (!authService.hasAdministrator()) {
+            JButton firstAdminBtn = new JButton("Create First Administrator");
+            firstAdminBtn.setFont(UITheme.FONT_BODY);
+            firstAdminBtn.setForeground(UITheme.DANGER);
+            firstAdminBtn.setBorderPainted(false);
+            firstAdminBtn.setContentAreaFilled(false);
+            firstAdminBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            firstAdminBtn.addActionListener(e -> openFirstAdminSetup());
+            leftActions.add(firstAdminBtn);
+        }
 
         JPanel actionButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         actionButtons.setBackground(UITheme.CARD_BG);
@@ -123,7 +138,7 @@ public class LoginDialog extends JDialog {
         actionButtons.add(cancelBtn);
         actionButtons.add(loginBtn);
 
-        buttonPanel.add(registerLinkBtn, BorderLayout.WEST);
+        buttonPanel.add(leftActions, BorderLayout.WEST);
         buttonPanel.add(actionButtons, BorderLayout.EAST);
         root.add(buttonPanel, BorderLayout.SOUTH);
     }
@@ -156,5 +171,14 @@ public class LoginDialog extends JDialog {
         dispose();
         RegisterDialog regDialog = new RegisterDialog(getOwner(), authService, sessionContext, onLoginSuccess);
         regDialog.setVisible(true);
+    }
+
+    private void openFirstAdminSetup() {
+        dispose();
+        FirstAdminSetupDialog setupDialog = new FirstAdminSetupDialog(getOwner(), authService, () -> {
+            LoginDialog loginDialog = new LoginDialog(getOwner(), authService, sessionContext, onLoginSuccess);
+            loginDialog.setVisible(true);
+        });
+        setupDialog.setVisible(true);
     }
 }

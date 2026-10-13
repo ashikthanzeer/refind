@@ -36,4 +36,13 @@ class LostItemAppStartupSafetyTest {
         assertTrue(LostItemApp.runDemoSeedIfEnabled(seedCalls::incrementAndGet));
         assertEquals(1, seedCalls.get());
     }
+
+    @Test
+    void normalStartupDoesNotCreateAnAdministratorAutomatically() {
+        System.clearProperty("refind.seedDemoData");
+        System.clearProperty("refind.autoInitializeSchema");
+
+        assertFalse(LostItemApp.isDemoDataSeedingEnabled());
+        assertFalse(Boolean.getBoolean("refind.autoInitializeSchema"));
+    }
 }

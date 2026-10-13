@@ -24,6 +24,9 @@ db.password=YOUR_PASSWORD
 # REFIND_AUTO_INITIALIZE_SCHEMA=true   # Only for a non-production development database.
 # REFIND_SEED_DEMO_DATA=true           # Adds sample categories, locations, users, and items only when explicitly requested.
 
+# First-administrator bootstrap is explicit and only available when no admin exists.
+# The application does not create an admin automatically at startup.
+
 # Integration-test database guard (required only for dedicated DB tests):
 # REFIND_TEST_DB_URL=jdbc:mysql://localhost:3306/test_refind?sslMode=REQUIRED
 # REFIND_TEST_DB_USERNAME=refind_test_user
